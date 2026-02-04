@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>资源共享平台 - 前端联调</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__inner">
+        <h1>资源共享平台</h1>
+        <p>前端联调版：覆盖注册、登录、项目发布、角色拆分、申请与审核。</p>
+        <div class="hero__meta">
+          <label>API Base</label>
+          <input id="apiBase" value="http://127.0.0.1:5000" />
+          <button id="saveBase">保存</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>1. 注册</h2>
+        <div class="form">
+          <input id="regUsername" placeholder="username" />
+          <input id="regPassword" type="password" placeholder="password" />
+          <select id="regUserType">
+            <option value="学生">学生</option>
+            <option value="企业">企业</option>
+          </select>
+          <input id="regRealName" placeholder="real_name" />
+          <input id="regSchoolCompany" placeholder="school_company" />
+          <input id="regSkillTags" placeholder="skill_tags (可选)" />
+          <input id="regContact" placeholder="contact (可选)" />
+          <button id="regBtn">注册</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. 登录</h2>
+        <div class="form">
+          <input id="loginUsername" placeholder="username" />
+          <input id="loginPassword" type="password" placeholder="password" />
+          <button id="loginBtn">登录</button>
+        </div>
+        <div class="token-box">
+          <div>
+            <span>当前 token</span>
+            <code id="tokenPreview">未登录</code>
+          </div>
+          <div>
+            <span>用户类型</span>
+            <code id="userTypePreview">-</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. 项目列表（公共）</h2>
+        <div class="form inline">
+          <input id="searchKeyword" placeholder="搜索关键字" />
+          <button id="loadProjects">加载项目</button>
+        </div>
+        <div id="projectList" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h2>4. 项目详情（含角色）</h2>
+        <div class="form inline">
+          <input id="projectId" placeholder="project_id" />
+          <button id="loadProjectDetail">查看详情</button>
+        </div>
+        <div id="projectDetail" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h2>5. 企业发布项目</h2>
+        <div class="form">
+          <input id="projName" placeholder="project_name" />
+          <input id="projDesc" placeholder="description" />
+          <input id="projCompany" placeholder="company" />
+          <input id="projStatus" placeholder="project_status (招募中/进行中...)" />
+          <input id="projDeadline" placeholder="deadline (可选)" />
+          <button id="createProject">创建项目</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>6. 企业创建角色</h2>
+        <div class="form">
+          <input id="roleProjectId" placeholder="project_id" />
+          <input id="roleName" placeholder="role_name" />
+          <input id="roleDesc" placeholder="task_desc" />
+          <input id="roleSkills" placeholder="skill_require" />
+          <input id="roleLimit" placeholder="limit_num" />
+          <input id="roleStatus" placeholder="role_status (招募中/进行中/已完成)" />
+          <input id="roleDeadline" placeholder="task_deadline (可选)" />
+          <button id="createRole">创建角色</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>7. 学生申请角色</h2>
+        <div class="form">
+          <input id="applyRoleId" placeholder="role_id" />
+          <input id="applyMotivation" placeholder="motivation" />
+          <button id="applyRole">申请</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>8. 学生申请列表</h2>
+        <button id="loadMyApps">查看我的申请</button>
+        <div id="myApps" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h2>9. 企业查看角色申请</h2>
+        <div class="form inline">
+          <input id="appsRoleId" placeholder="role_id" />
+          <button id="loadRoleApps">查看申请</button>
+        </div>
+        <div id="roleApps" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h2>10. 企业审核申请</h2>
+        <div class="form inline">
+          <input id="reviewAppId" placeholder="application_id" />
+          <select id="reviewDecision">
+            <option value="accepted">accepted</option>
+            <option value="rejected">rejected</option>
+          </select>
+          <button id="reviewApp">提交审核</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="toast" id="toast"></aside>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

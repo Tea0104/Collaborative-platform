@@ -1,8 +1,3 @@
-"""
-保留你现有的“非 /api/”接口，避免前端已有页面/同学调试脚本失效。
-同时，这些接口的实现复用现有数据库表，不强制前端立刻迁移到 /api/。
-"""
-
 from flask import Blueprint, jsonify, request
 
 from .db import get_db_connection

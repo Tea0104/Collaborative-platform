@@ -1,6 +1,6 @@
-# 资源共享平台后端 API（初版）
+# 资源共享平台后端 API
 
-> 说明：所有时间为本地时间字符串。除公共接口外，均需携带 `Authorization: Bearer <token>` 头。
+> 说明：除公共接口外，均需携带 `Authorization: Bearer <token>` 头。
 
 ## 认证
 
@@ -158,10 +158,3 @@ curl -X POST http://127.0.0.1:5000/api/auth/login \
   -d "{\"username\":\"company1\",\"password\":\"123456\"}"
 ```
 
-```bash
-# 创建项目（替换 TOKEN）
-curl -X POST http://127.0.0.1:5000/api/enterprise/projects \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer TOKEN" \
-  -d "{\"project_name\":\"测试项目\",\"company\":\"某公司\"}"
-```
