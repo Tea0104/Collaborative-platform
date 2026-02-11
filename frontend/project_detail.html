@@ -1,0 +1,724 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目详情 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body { background-color: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .breadcrumb {
+            background-color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .breadcrumb a { color: #666; text-decoration: none; }
+        .breadcrumb a:hover { color: #2c7be5; }
+
+        .project-detail {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .project-main {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .project-sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+        .project-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .project-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #222;
+        }
+
+        .project-org {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .org-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2c7be5, #1c5bb8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .project-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+
+        .tag {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tag-status { background-color: #e1f0ff; color: #2c7be5; }
+
+        .section { margin-bottom: 30px; }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c7be5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f7ff;
+        }
+
+        .project-description { color: #555; line-height: 1.8; margin-bottom: 12px; }
+
+        .goals-list { list-style: none; padding-left: 20px; }
+
+        .goals-list li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+            color: #555;
+        }
+
+        .goals-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #0a8f5c;
+            font-weight: bold;
+        }
+
+        .timeline { position: relative; padding-left: 30px; }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e0e0e0;
+        }
+
+        .timeline-item { position: relative; margin-bottom: 20px; }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -25px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #2c7be5;
+            border: 2px solid white;
+            box-shadow: 0 0 0 3px #2c7be5;
+        }
+
+        .timeline-date { font-size: 14px; color: #666; margin-bottom: 5px; }
+
+        .sidebar-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .info-grid { display: grid; gap: 15px; }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label { color: #666; font-weight: 500; }
+        .info-value { color: #222; font-weight: 500; text-align: right; word-break: break-all; }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .role-card {
+            background-color: #f8fafd;
+            border: 1px solid #e1e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .role-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #222; }
+
+        .role-requirements { list-style: none; margin-bottom: 15px; }
+
+        .role-requirements li {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .role-requirements li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #2c7be5;
+        }
+
+        .role-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .status-available { background-color: #e1f0ff; color: #2c7be5; }
+        .status-full { background-color: #ffe6e6; color: #d32f2f; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #2c7be5;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1c5bb8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 123, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #f8f9fa;
+            color: #555;
+            border: 1px solid #ddd;
+            width: 100%;
+        }
+
+        .btn-secondary:hover:not(:disabled) { background-color: #e9ecef; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .application-status {
+            background-color: #f8fafd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .status-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .badge-pending { background-color: #fff2cc; color: #b38f00; }
+        .badge-approved { background-color: #d9f2e6; color: #0a8f5c; }
+        .badge-rejected { background-color: #ffe6e6; color: #d32f2f; }
+        .badge-cancelled { background-color: #eceff3; color: #5c6670; }
+
+        .status-details { color: #666; font-size: 14px; margin-top: 10px; }
+
+        .hidden { display: none !important; }
+
+        .error-box {
+            color: #b00020;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        footer {
+            background-color: #222;
+            color: #aaa;
+            padding: 40px 0 20px;
+            margin-top: 40px;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            font-size: 14px;
+            color: #888;
+        }
+
+        @media (max-width: 992px) {
+            .project-detail { grid-template-columns: 1fr; }
+            .roles-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .header-container { flex-direction: column; gap: 15px; text-align: center; }
+            .project-main { padding: 20px; }
+            .sidebar-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-container">
+        <div class="logo">
+            <h1><i class="fas fa-users-cog"></i> 多角色共创平台</h1>
+        </div>
+        <a href="project_list.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> 返回项目列表
+        </a>
+    </div>
+</header>
+
+<nav class="breadcrumb">
+    <div class="container">
+        <a href="project_list.html">项目列表</a> / <span>项目详情</span>
+    </div>
+</nav>
+
+<main class="container">
+    <div id="error-box" class="error-box hidden"></div>
+
+    <div class="project-detail" id="project-detail">
+        <div class="project-main">
+            <div class="project-header">
+                <h1 class="project-title" id="project-title">加载中...</h1>
+
+                <div class="project-org">
+                    <div class="org-avatar" id="org-avatar">-</div>
+                    <div>
+                        <div style="font-weight: 600; color: #222;" id="project-company">-</div>
+                        <div style="font-size: 14px;" id="project-publisher">发布者：-</div>
+                    </div>
+                </div>
+
+                <div class="project-tags">
+                    <span class="tag tag-status" id="project-status">-</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-file-alt"></i> 项目描述</h2>
+                <div class="project-description" id="project-description">-</div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-bullseye"></i> 项目目标</h2>
+                <ul class="goals-list" id="project-goals">
+                    <li>暂无项目目标信息</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-calendar-alt"></i> 项目时间线</h2>
+                <div class="timeline" id="project-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date" id="project-publish-time">-</div>
+                        <div class="timeline-content">项目发布时间</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date" id="project-deadline">-</div>
+                        <div class="timeline-content">项目截止时间</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-sidebar">
+            <div class="sidebar-card">
+                <h3 style="margin-bottom: 20px; color: #222; font-size: 18px;">项目信息</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">发布机构</span>
+                        <span class="info-value" id="info-company">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">项目状态</span>
+                        <span class="info-value" id="info-status">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">发布时间</span>
+                        <span class="info-value" id="info-publish-time">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">截止时间</span>
+                        <span class="info-value" id="info-deadline">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">成果链接</span>
+                        <span class="info-value" id="project-result-url">未设置</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 style="margin-bottom: 20px; color: #222; font-size: 18px;">招募角色</h3>
+                <div class="roles-grid" id="roles-container"></div>
+            </div>
+
+            <div class="sidebar-card application-status hidden" id="application-status-box">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                    <h3 style="color: #222; font-size: 18px;">我的申请状态</h3>
+                    <span class="status-badge" id="application-badge">-</span>
+                </div>
+                <div class="status-details" id="application-details"></div>
+                <button class="btn btn-secondary hidden" id="cancel-application-btn" style="margin-top: 15px;">
+                    <i class="fas fa-times"></i> 取消申请
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <div class="copyright">
+            <p>© 2026 多角色共创平台 保留所有权利</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+    const token = localStorage.getItem("auth_token");
+    const userType = localStorage.getItem("user_type") || "";
+    const projectId = new URLSearchParams(window.location.search).get("id");
+
+    let currentProjectApplications = [];
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showError(message) {
+        const errorBox = document.getElementById("error-box");
+        errorBox.textContent = message;
+        errorBox.classList.remove("hidden");
+        document.getElementById("project-detail").classList.add("hidden");
+    }
+
+    function formatDate(value) {
+        if (!value) return "未设置";
+        const str = String(value);
+        const d = new Date(str.replace(" ", "T"));
+        if (Number.isNaN(d.getTime())) return str;
+        return d.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function isStudentUser() {
+        return ["学生", "瀛︾敓", "student", "Student"].includes(userType);
+    }
+
+    function isRecruitingStatus(status) {
+        const text = String(status || "");
+        return text.includes("招募") || text.includes("鎷涘嫙") || text.toLowerCase() === "open";
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = options.headers || {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const text = await response.text();
+        let data = {};
+
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (_) {
+            throw new Error("服务返回格式异常");
+        }
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || "请求失败");
+        }
+
+        return data;
+    }
+
+    function getMyApplication(roleId) {
+        return currentProjectApplications.find((item) => Number(item.role_id) === Number(roleId));
+    }
+
+    function roleStatusClass(role) {
+        return Number(role.join_num || 0) >= Number(role.limit_num || 0) ? "status-full" : "status-available";
+    }
+
+    function roleStatusText(role) {
+        const status = role.role_status || "-";
+        return `${status} (${Number(role.join_num || 0)}/${Number(role.limit_num || 0)})`;
+    }
+
+    function badgeClass(status) {
+        if (status === "accepted") return "status-badge badge-approved";
+        if (status === "rejected") return "status-badge badge-rejected";
+        if (status === "cancelled") return "status-badge badge-cancelled";
+        return "status-badge badge-pending";
+    }
+
+    function badgeText(status) {
+        if (status === "accepted") return "已通过";
+        if (status === "rejected") return "已拒绝";
+        if (status === "cancelled") return "已撤回";
+        return "待审核";
+    }
+
+    function setProjectInfo(project) {
+        const name = project.project_name || "-";
+        const company = project.company || "-";
+        const publisher = project.publisher_name || "-";
+        const status = project.project_status || "-";
+        const description = project.description || "暂无描述";
+        const publishTime = formatDate(project.publish_time);
+        const deadline = formatDate(project.deadline);
+        const resultUrl = project.result_url || "未设置";
+
+        document.getElementById("project-title").textContent = name;
+        document.getElementById("project-company").textContent = company;
+        document.getElementById("project-publisher").textContent = `发布者：${publisher}`;
+        document.getElementById("project-status").textContent = status;
+        document.getElementById("project-description").textContent = description;
+        document.getElementById("project-publish-time").textContent = publishTime;
+        document.getElementById("project-deadline").textContent = deadline;
+        document.getElementById("info-company").textContent = company;
+        document.getElementById("info-status").textContent = status;
+        document.getElementById("info-publish-time").textContent = publishTime;
+        document.getElementById("info-deadline").textContent = deadline;
+
+        if (project.result_url) {
+            document.getElementById("project-result-url").innerHTML = `<a href="${escapeHtml(project.result_url)}" target="_blank" rel="noopener noreferrer">查看成果</a>`;
+        } else {
+            document.getElementById("project-result-url").textContent = "未设置";
+        }
+
+        document.getElementById("org-avatar").textContent = company.slice(0, 1).toUpperCase();
+
+        const goalsContainer = document.getElementById("project-goals");
+        goalsContainer.innerHTML = "";
+        const descPieces = description
+            .split(/[。！？\n]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .slice(0, 3);
+
+        if (!descPieces.length) {
+            goalsContainer.innerHTML = "<li>暂无项目目标信息</li>";
+        } else {
+            goalsContainer.innerHTML = descPieces.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+        }
+    }
+
+    function renderRoles(roles) {
+        const container = document.getElementById("roles-container");
+        if (!Array.isArray(roles) || !roles.length) {
+            container.innerHTML = "<div class=\"role-card\"><div class=\"role-title\">暂无招募角色</div></div>";
+            return;
+        }
+
+        container.innerHTML = roles.map((role) => {
+            const myApp = getMyApplication(role.role_id);
+            const isFull = Number(role.join_num || 0) >= Number(role.limit_num || 0);
+            const canApply = isStudentUser() && isRecruitingStatus(role.role_status) && !isFull && !myApp;
+
+            const requirements = String(role.skill_require || "暂无")
+                .split(/[，,\/]/)
+                .map((item) => item.trim())
+                .filter(Boolean)
+                .slice(0, 4)
+                .map((item) => `<li>${escapeHtml(item)}</li>`)
+                .join("") || "<li>暂无</li>";
+
+            const btnText = myApp ? `已申请 (${badgeText(myApp.status)})` : "申请加入";
+
+            return `
+                <div class="role-card">
+                    <div class="role-title">${escapeHtml(role.role_name || "-")}</div>
+                    <div class="role-status ${roleStatusClass(role)}">${escapeHtml(roleStatusText(role))}</div>
+                    <ul class="role-requirements">
+                        <li>任务：${escapeHtml(role.task_desc || "暂无")}</li>
+                        ${requirements}
+                    </ul>
+                    <button class="btn ${canApply ? "btn-primary" : "btn-secondary"}" ${canApply ? "" : "disabled"} onclick="applyForRole(${Number(role.role_id) || 0})">
+                        <i class="fas fa-paper-plane"></i> ${btnText}
+                    </button>
+                </div>
+            `;
+        }).join("");
+    }
+
+    function renderApplicationStatus() {
+        const box = document.getElementById("application-status-box");
+        if (!currentProjectApplications.length) {
+            box.classList.add("hidden");
+            return;
+        }
+
+        const app = currentProjectApplications.find((item) => item.status === "pending") || currentProjectApplications[0];
+        box.classList.remove("hidden");
+
+        const badge = document.getElementById("application-badge");
+        badge.className = badgeClass(app.status);
+        badge.textContent = badgeText(app.status);
+
+        document.getElementById("application-details").innerHTML = `
+            <p><strong>申请角色：</strong>${escapeHtml(app.role_name || "-")}</p>
+            <p><strong>申请时间：</strong>${escapeHtml(formatDate(app.apply_time))}</p>
+            <p><strong>申请说明：</strong>${escapeHtml(app.motivation || "无")}</p>
+        `;
+
+        const cancelBtn = document.getElementById("cancel-application-btn");
+        if (app.status === "pending") {
+            cancelBtn.classList.remove("hidden");
+            cancelBtn.onclick = () => cancelApplication(app.application_id);
+        } else {
+            cancelBtn.classList.add("hidden");
+            cancelBtn.onclick = null;
+        }
+    }
+
+    async function loadMyApplications() {
+        if (!token || !isStudentUser()) {
+            currentProjectApplications = [];
+            return;
+        }
+
+        const data = await apiFetch("/api/student/applications");
+        const applications = Array.isArray(data.applications) ? data.applications : [];
+        currentProjectApplications = applications.filter((item) => Number(item.project_id) === Number(projectId));
+    }
+
+    async function applyForRole(roleId) {
+        if (!token) {
+            alert("请先登录");
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!isStudentUser()) {
+            alert("只有学生可以申请角色");
+            return;
+        }
+
+        const motivation = prompt("请输入申请说明（可选）：") || "";
+
+        try {
+            await apiFetch(`/api/roles/${roleId}/apply`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ motivation })
+            });
+            alert("申请成功");
+            await initPage();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function cancelApplication(applicationId) {
+        if (!confirm("确认撤回当前申请吗？")) return;
+
+        try {
+            await apiFetch(`/api/student/applications/${applicationId}/cancel`, { method: "POST" });
+            alert("已撤回申请");
+            await initPage();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function initPage() {
+        if (!projectId) {
+            showError("缺少项目 ID 参数");
+            return;
+        }
+
+        try {
+            await loadMyApplications();
+            const detail = await apiFetch(`/api/projects/${projectId}`);
+            setProjectInfo(detail.project || {});
+            renderRoles(Array.isArray(detail.roles) ? detail.roles : []);
+            renderApplicationStatus();
+        } catch (err) {
+            showError(err.message);
+        }
+    }
+
+    window.applyForRole = applyForRole;
+
+    initPage();
+</script>
+</body>
+</html>
