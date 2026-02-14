@@ -477,12 +477,12 @@
 
     function isStudentUser() {
         const t = (localStorage.getItem("user_type") || "").trim();
-        return ["学生", "瀛︾敓", "student", "Student"].includes(t);
+        return ["学生", "student", "Student"].includes(t);
     }
 
     function isEnterpriseUser() {
         const t = (localStorage.getItem("user_type") || "").trim();
-        return ["企业", "浼佷笟", "enterprise", "Enterprise"].includes(t);
+        return ["企业", "enterprise", "Enterprise"].includes(t);
     }
 
     function updateNavActionLink() {
@@ -736,4 +736,3 @@
 </script>
 </body>
 </html>
-

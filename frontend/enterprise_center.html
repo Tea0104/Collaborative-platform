@@ -9,39 +9,23 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
         body { background: #f5f7fa; color: #333; line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-
-        header {
-            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
-            color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            position: sticky; top: 0; z-index: 100;
-        }
+        header { background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%); color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,.1); position: sticky; top: 0; z-index: 100; }
         .header-container { display: flex; justify-content: space-between; align-items: center; }
         .logo h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
         .header-actions { display: flex; align-items: center; gap: 12px; }
         .back-link { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35);
-            padding: 8px 14px; border-radius: 6px; cursor: pointer;
-        }
-
+        .logout-btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.35); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
         .page-title { margin: 24px 0 8px; font-size: 28px; color: #1f2937; }
         .page-desc { color: #6b7280; margin-bottom: 18px; }
-
         .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 24px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
         .card h2 { font-size: 20px; color: #2563eb; margin-bottom: 14px; }
         .hint { color: #6b7280; font-size: 13px; margin-bottom: 10px; }
-
         .field { margin-bottom: 10px; }
         .field label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 6px; }
-        .field input, .field select, .field textarea {
-            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
-        }
+        .field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
         .field textarea { min-height: 80px; resize: vertical; }
-        .btn {
-            border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600;
-            display: inline-flex; align-items: center; gap: 6px;
-        }
+        .btn { border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: #2563eb; color: #fff; }
         .btn-primary:hover { background: #1d4ed8; }
         .btn-secondary { background: #eef2ff; color: #1d4ed8; }
@@ -49,12 +33,8 @@
         .btn-sm { padding: 6px 10px; font-size: 12px; }
         .btn-accept { background: #16a34a; color: #fff; }
         .btn-reject { background: #dc2626; color: #fff; }
-
         .list { margin-top: 10px; display: grid; gap: 10px; }
-        .item {
-            background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;
-            display: flex; justify-content: space-between; gap: 10px; align-items: center;
-        }
+        .item { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
         .item-main { min-width: 0; }
         .item-title { font-weight: 600; color: #111827; }
         .item-sub { color: #6b7280; font-size: 13px; }
@@ -205,9 +185,7 @@
         if (token) headers.Authorization = `Bearer ${token}`;
         const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
         const data = await response.json();
-        if (!response.ok || data.success === false) {
-            throw new Error(data.message || "请求失败");
-        }
+        if (!response.ok || data.success === false) throw new Error(data.message || "请求失败");
         return data;
     }
 
@@ -215,10 +193,7 @@
         const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
         if (authToken) {
             try {
-                await fetch(`${API_BASE}/api/auth/logout`, {
-                    method: "POST",
-                    headers: { Authorization: `Bearer ${authToken}` }
-                });
+                await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", headers: { Authorization: `Bearer ${authToken}` } });
             } catch (_) {}
         }
         localStorage.removeItem("auth_token");
@@ -230,7 +205,7 @@
     }
 
     function asEnterprise() {
-        return ["企业", "浼佷笟", "enterprise", "Enterprise"].includes(userType);
+        return ["企业", "enterprise", "Enterprise"].includes(userType);
     }
 
     async function loadEnterpriseProjects() {
@@ -241,7 +216,7 @@
     function renderProjectSelect(selectId, projects) {
         const select = document.getElementById(selectId);
         if (!projects.length) {
-            select.innerHTML = `<option value="">暂无项目</option>`;
+            select.innerHTML = "<option value=\"\">暂无项目</option>";
             return;
         }
         select.innerHTML = projects.map((p) => `<option value="${p.project_id}">${escapeHtml(p.project_name || `项目${p.project_id}`)}</option>`).join("");
@@ -309,19 +284,19 @@
         const projectId = document.getElementById("review-project-id").value;
         const roleSelect = document.getElementById("review-role-id");
         if (!projectId) {
-            roleSelect.innerHTML = `<option value="">请先选择项目</option>`;
+            roleSelect.innerHTML = "<option value=\"\">请先选择项目</option>";
             return;
         }
         try {
             const data = await apiFetch(`/api/enterprise/projects/${projectId}/roles`);
             const roles = Array.isArray(data.roles) ? data.roles : [];
             if (!roles.length) {
-                roleSelect.innerHTML = `<option value="">该项目暂无角色</option>`;
+                roleSelect.innerHTML = "<option value=\"\">该项目暂无角色</option>";
                 return;
             }
             roleSelect.innerHTML = roles.map((r) => `<option value="${r.role_id}">${escapeHtml(r.role_name || `角色${r.role_id}`)}</option>`).join("");
         } catch (err) {
-            roleSelect.innerHTML = `<option value="">加载失败</option>`;
+            roleSelect.innerHTML = "<option value=\"\">加载失败</option>";
             showMsg("applications-msg", false, err.message);
         }
     }
@@ -352,14 +327,14 @@
         const roleId = document.getElementById("review-role-id").value;
         const list = document.getElementById("applications-list");
         if (!roleId) {
-            list.innerHTML = `<div class="empty">请先选择角色</div>`;
+            list.innerHTML = "<div class=\"empty\">请先选择角色</div>";
             return;
         }
         try {
             const data = await apiFetch(`/api/enterprise/roles/${roleId}/applications`);
             const applications = Array.isArray(data.applications) ? data.applications : [];
             if (!applications.length) {
-                list.innerHTML = `<div class="empty">暂无申请记录</div>`;
+                list.innerHTML = "<div class=\"empty\">暂无申请记录</div>";
                 return;
             }
             list.innerHTML = applications.map((app) => {
@@ -379,7 +354,7 @@
                 `;
             }).join("");
         } catch (err) {
-            list.innerHTML = `<div class="empty">加载失败</div>`;
+            list.innerHTML = "<div class=\"empty\">加载失败</div>";
             showMsg("applications-msg", false, err.message);
         }
     }
@@ -391,17 +366,16 @@
             return;
         }
         if (!asEnterprise()) {
-            alert("只有企业账号可访问企业中心");
+            alert("只有企业账号可以访问企业中心");
             window.location.href = "project_list.html";
             return;
         }
-
         try {
             const projects = await loadEnterpriseProjects();
             renderProjectSelect("role-project-id", projects);
             renderProjectSelect("review-project-id", projects);
             await loadRolesForReview();
-            document.getElementById("applications-list").innerHTML = `<div class="empty">请选择角色后点击“加载申请”</div>`;
+            document.getElementById("applications-list").innerHTML = "<div class=\"empty\">请选择角色后点击“加载申请”</div>";
         } catch (err) {
             showMsg("applications-msg", false, err.message);
         }
@@ -413,7 +387,6 @@
     window.loadApplications = loadApplications;
     window.reviewApplication = reviewApplication;
     window.logout = logout;
-
     initPage();
 </script>
 </body>

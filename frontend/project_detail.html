@@ -514,12 +514,12 @@
     }
 
     function isStudentUser() {
-        return ["学生", "瀛︾敓", "student", "Student"].includes(userType);
+        return ["学生", "student", "Student"].includes(userType);
     }
 
     function isRecruitingStatus(status) {
         const text = String(status || "");
-        return text.includes("招募") || text.includes("鎷涘嫙") || text.toLowerCase() === "open";
+        return text.includes("招募") || text.toLowerCase() === "open";
     }
 
     async function apiFetch(path, options = {}) {
