@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body {
+            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .register-card {
+            background: #fff; border-radius: 10px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 100%; max-width: 500px; padding: 40px 30px;
+        }
+        .logo { text-align: center; margin-bottom: 30px; color: #2c7be5; }
+        .logo i { font-size: 48px; }
+        .logo h2 { margin-top: 10px; font-size: 24px; color: #333; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 14px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 14px; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: #2c7be5; box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.1);
+        }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: #2c7be5; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #1c5bb8; }
+        .btn-secondary { background: #f8f9fa; color: #555; border: 1px solid #ddd; margin-top: 15px; }
+        .btn-secondary:hover { background: #e9ecef; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .error { background-color: #ffe6e6; color: #d32f2f; }
+        .success { background-color: #d9f2e6; color: #0a8f5c; }
+        .login-link { margin-top: 20px; text-align: center; font-size: 14px; color: #666; }
+        .login-link a { color: #2c7be5; text-decoration: none; font-weight: 500; }
+
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="register-card">
+    <div class="logo">
+        <i class="fas fa-user-plus"></i>
+        <h2>创建新账号</h2>
+    </div>
+
+    <form id="registerForm" onsubmit="event.preventDefault(); handleRegister();">
+        <div class="form-row">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> 用户名 *</label>
+                <input type="text" id="username" placeholder="至少 3 位" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> 密码 *</label>
+                <input type="password" id="password" placeholder="至少 6 位" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label><i class="fas fa-tag"></i> 用户类型 *</label>
+                <select id="user_type" required>
+                    <option value="">请选择</option>
+                    <option value="学生">学生</option>
+                    <option value="企业">企业</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-id-card"></i> 真实姓名 *</label>
+                <input type="text" id="real_name" placeholder="姓名" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fas fa-school"></i> 学校/单位 *</label>
+            <input type="text" id="school_company" placeholder="例如：XX 大学 / XX 公司" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label><i class="fas fa-code"></i> 技能标签</label>
+                <input type="text" id="skill_tags" placeholder="Python,Flask...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> 联系方式</label>
+                <input type="text" id="contact" placeholder="手机/邮箱">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="registerBtn">
+            <i class="fas fa-check-circle"></i> 注册
+        </button>
+    </form>
+
+    <div id="message" class="message" style="display:none;"></div>
+
+    <div class="login-link">
+        已有账号？ <a href="login.html">立即登录</a>
+    </div>
+
+    <button class="btn btn-secondary" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> 返回首页
+    </button>
+</div>
+
+<script>
+    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+
+    function showMessage(text, type) {
+        const msgDiv = document.getElementById("message");
+        msgDiv.textContent = text;
+        msgDiv.className = `message ${type}`;
+        msgDiv.style.display = "block";
+    }
+
+    async function handleRegister() {
+        const payload = {
+            username: document.getElementById("username").value.trim(),
+            password: document.getElementById("password").value.trim(),
+            user_type: document.getElementById("user_type").value.trim(),
+            real_name: document.getElementById("real_name").value.trim(),
+            school_company: document.getElementById("school_company").value.trim(),
+            skill_tags: document.getElementById("skill_tags").value.trim(),
+            contact: document.getElementById("contact").value.trim()
+        };
+
+        if (!payload.username || payload.username.length < 3) {
+            showMessage("用户名至少 3 位", "error");
+            return;
+        }
+        if (!payload.password || payload.password.length < 6) {
+            showMessage("密码至少 6 位", "error");
+            return;
+        }
+        if (!payload.user_type) {
+            showMessage("请选择用户类型", "error");
+            return;
+        }
+        if (!payload.real_name) {
+            showMessage("真实姓名不能为空", "error");
+            return;
+        }
+        if (!payload.school_company) {
+            showMessage("学校/单位不能为空", "error");
+            return;
+        }
+
+        const registerBtn = document.getElementById("registerBtn");
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 注册中...';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "注册失败");
+            }
+
+            showMessage("注册成功，正在跳转登录页...", "success");
+            setTimeout(() => { window.location.href = "login.html"; }, 1000);
+        } catch (error) {
+            showMessage(error.message || "网络错误，无法连接到服务器", "error");
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = '<i class="fas fa-check-circle"></i> 注册';
+        }
+    }
+
+    function goBack() {
+        window.location.href = "index.html";
+    }
+
+    window.handleRegister = handleRegister;
+    window.goBack = goBack;
+</script>
+</body>
+</html>
+
+

@@ -436,7 +436,7 @@
 
 <script>
     const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
 
     function normalizeText(v) {
         return String(v || "").trim();
@@ -464,10 +464,23 @@
         document.getElementById("current-user").innerHTML = `<i class="fas fa-user"></i> ${escapeHtml(userText)}`;
     }
 
-    function logout() {
+    async function logout() {
+        const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+        if (authToken) {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${authToken}` }
+                });
+            } catch (_) {
+            }
+        }
+
         localStorage.removeItem("auth_token");
+        localStorage.removeItem("token");
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
+        localStorage.removeItem("user");
         window.location.href = "login.html";
     }
 
@@ -618,3 +631,5 @@
 </script>
 </body>
 </html>
+
+

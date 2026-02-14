@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body {
+            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .login-card {
+            background: #fff; border-radius: 10px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 100%; max-width: 420px; padding: 40px 30px;
+        }
+        .logo { text-align: center; margin-bottom: 30px; color: #2c7be5; }
+        .logo i { font-size: 48px; }
+        .logo h2 { margin-top: 10px; font-size: 24px; color: #333; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; font-size: 14px; }
+        .form-group input {
+            width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 15px; transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none; border-color: #2c7be5; box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.1);
+        }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: #2c7be5; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #1c5bb8; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .error { background-color: #ffe6e6; color: #d32f2f; }
+        .success { background-color: #d9f2e6; color: #0a8f5c; }
+        .register-link { margin-top: 20px; text-align: center; font-size: 14px; color: #666; }
+        .register-link a { color: #2c7be5; text-decoration: none; font-weight: 500; }
+        .register-link a:hover { text-decoration: underline; }
+        .back-link { margin-top: 15px; text-align: center; }
+        .back-link a { color: #888; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
+        .back-link a:hover { color: #2c7be5; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="logo">
+        <i class="fas fa-users-cog"></i>
+        <h2>欢迎登录</h2>
+    </div>
+
+    <div class="form-group">
+        <label><i class="fas fa-user"></i> 用户名</label>
+        <input type="text" id="username" placeholder="请输入用户名" autofocus>
+    </div>
+    <div class="form-group">
+        <label><i class="fas fa-lock"></i> 密码</label>
+        <input type="password" id="password" placeholder="请输入密码">
+    </div>
+
+    <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">
+        <i class="fas fa-sign-in-alt"></i> 登录
+    </button>
+
+    <div id="message" class="message" style="display:none;"></div>
+
+    <div class="register-link">
+        还没有账号？ <a href="register.html">立即注册</a>
+    </div>
+
+    <div class="back-link">
+        <a href="index.html"><i class="fas fa-arrow-left"></i> 返回首页</a>
+    </div>
+</div>
+
+<script>
+    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+
+    function showMessage(text, type) {
+        const msgDiv = document.getElementById("message");
+        msgDiv.textContent = text;
+        msgDiv.className = `message ${type}`;
+        msgDiv.style.display = "block";
+    }
+
+    function setAuthStorage(token, user) {
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", user.username || "");
+        localStorage.setItem("user_type", user.user_type || "");
+        localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    async function handleLogin() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const loginBtn = document.getElementById("loginBtn");
+
+        if (!username || !password) {
+            showMessage("用户名和密码不能为空", "error");
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success || !data.token) {
+                throw new Error(data.message || "登录失败");
+            }
+
+            let profile = {
+                user_id: data.user_id,
+                username,
+                user_type: data.user_type,
+                real_name: "",
+                school_company: ""
+            };
+
+            try {
+                const profileRes = await fetch(`${API_BASE}/api/auth/profile`, {
+                    headers: { Authorization: `Bearer ${data.token}` }
+                });
+                const profileData = await profileRes.json();
+                if (profileRes.ok && profileData.success && profileData.user) {
+                    profile = profileData.user;
+                }
+            } catch (_) {
+            }
+
+            setAuthStorage(data.token, profile);
+            showMessage("登录成功，正在跳转...", "success");
+            setTimeout(() => { window.location.href = "index.html"; }, 1000);
+        } catch (error) {
+            showMessage(error.message || "网络错误，无法连接到服务器", "error");
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+        }
+    }
+
+    window.handleLogin = handleLogin;
+
+    document.getElementById("password").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLogin();
+    });
+</script>
+</body>
+</html>
+
+
