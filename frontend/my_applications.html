@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的申请 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body { background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
+            color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .actions { display: flex; align-items: center; gap: 12px; }
+        .back-link { color: #fff; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 8px 14px; border-radius: 6px; cursor: pointer;
+        }
+
+        .page-title { margin: 24px 0 12px; font-size: 28px; color: #1f2937; }
+        .list { display: grid; gap: 12px; margin-bottom: 24px; }
+        .item {
+            background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+            display: flex; justify-content: space-between; gap: 16px; align-items: center;
+        }
+        .item-main { min-width: 0; }
+        .title { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+        .sub { color: #6b7280; font-size: 14px; margin-bottom: 2px; }
+        .badge {
+            display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+            margin-bottom: 6px;
+        }
+        .s-pending { background: #fff2cc; color: #b38f00; }
+        .s-accepted { background: #d9f2e6; color: #0a8f5c; }
+        .s-rejected { background: #ffe6e6; color: #d32f2f; }
+        .s-cancelled { background: #eceff3; color: #5c6670; }
+        .btn {
+            border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-cancel { background: #ef4444; color: #fff; }
+        .btn-cancel:disabled { background: #d1d5db; cursor: not-allowed; }
+        .empty {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 30px; text-align: center; color: #6b7280;
+        }
+        .msg { margin-bottom: 12px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
+        .msg.ok { display: block; background: #dcfce7; color: #166534; }
+        .msg.err { display: block; background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-container">
+        <div class="logo">
+            <h1><i class="fas fa-briefcase"></i> 我的申请</h1>
+        </div>
+        <div class="actions">
+            <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <h1 class="page-title">申请记录</h1>
+    <div id="msg" class="msg"></div>
+    <div id="list" class="list"></div>
+</main>
+
+<script>
+    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+    const userType = localStorage.getItem("user_type") || "";
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showMsg(ok, text) {
+        const el = document.getElementById("msg");
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function statusClass(status) {
+        if (status === "accepted") return "s-accepted";
+        if (status === "rejected") return "s-rejected";
+        if (status === "cancelled") return "s-cancelled";
+        return "s-pending";
+    }
+
+    function statusText(status) {
+        if (status === "accepted") return "已通过";
+        if (status === "rejected") return "已拒绝";
+        if (status === "cancelled") return "已撤回";
+        return "待审核";
+    }
+
+    function formatDate(value) {
+        if (!value) return "-";
+        const d = new Date(String(value).replace(" ", "T"));
+        if (Number.isNaN(d.getTime())) return String(value);
+        return d.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = options.headers || {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const data = await response.json();
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || "请求失败");
+        }
+        return data;
+    }
+
+    async function logout() {
+        const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+        if (authToken) {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${authToken}` }
+                });
+            } catch (_) {}
+        }
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("user_type");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    }
+
+    async function cancelApplication(applicationId) {
+        if (!confirm("确认撤回这条申请吗？")) return;
+        try {
+            await apiFetch(`/api/student/applications/${applicationId}/cancel`, { method: "POST" });
+            showMsg(true, "撤回成功");
+            await loadApplications();
+        } catch (err) {
+            showMsg(false, err.message);
+        }
+    }
+
+    function renderApplications(apps) {
+        const list = document.getElementById("list");
+        if (!apps.length) {
+            list.innerHTML = '<div class="empty">暂无申请记录</div>';
+            return;
+        }
+        list.innerHTML = apps.map((app) => {
+            const pending = app.status === "pending";
+            return `
+                <div class="item">
+                    <div class="item-main">
+                        <div class="badge ${statusClass(app.status)}">${escapeHtml(statusText(app.status))}</div>
+                        <div class="title">${escapeHtml(app.project_name || "-")}</div>
+                        <div class="sub">角色：${escapeHtml(app.role_name || "-")}</div>
+                        <div class="sub">申请时间：${escapeHtml(formatDate(app.apply_time))}</div>
+                        <div class="sub">说明：${escapeHtml(app.motivation || "无")}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-cancel" ${pending ? "" : "disabled"} onclick="cancelApplication(${Number(app.application_id) || 0})">
+                            <i class="fas fa-times"></i> 撤回
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    async function loadApplications() {
+        try {
+            const data = await apiFetch("/api/student/applications");
+            const apps = Array.isArray(data.applications) ? data.applications : [];
+            renderApplications(apps);
+        } catch (err) {
+            showMsg(false, err.message);
+            document.getElementById("list").innerHTML = '<div class="empty">加载失败</div>';
+        }
+    }
+
+    function ensureStudent() {
+        const isStudent = ["学生", "瀛︾敓", "student", "Student"].includes(userType);
+        if (!token) {
+            alert("请先登录");
+            window.location.href = "login.html";
+            return false;
+        }
+        if (!isStudent) {
+            alert("只有学生可以查看我的申请");
+            window.location.href = "project_list.html";
+            return false;
+        }
+        return true;
+    }
+
+    window.cancelApplication = cancelApplication;
+    window.logout = logout;
+
+    if (ensureStudent()) {
+        loadApplications();
+    }
+</script>
+</body>
+</html>

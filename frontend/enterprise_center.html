@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业中心 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body { background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
+            color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .back-link { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 8px 14px; border-radius: 6px; cursor: pointer;
+        }
+
+        .page-title { margin: 24px 0 8px; font-size: 28px; color: #1f2937; }
+        .page-desc { color: #6b7280; margin-bottom: 18px; }
+
+        .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 24px; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
+        .card h2 { font-size: 20px; color: #2563eb; margin-bottom: 14px; }
+        .hint { color: #6b7280; font-size: 13px; margin-bottom: 10px; }
+
+        .field { margin-bottom: 10px; }
+        .field label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 6px; }
+        .field input, .field select, .field textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
+        }
+        .field textarea { min-height: 80px; resize: vertical; }
+        .btn {
+            border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #eef2ff; color: #1d4ed8; }
+        .btn-secondary:hover { background: #dbeafe; }
+        .btn-sm { padding: 6px 10px; font-size: 12px; }
+        .btn-accept { background: #16a34a; color: #fff; }
+        .btn-reject { background: #dc2626; color: #fff; }
+
+        .list { margin-top: 10px; display: grid; gap: 10px; }
+        .item {
+            background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;
+            display: flex; justify-content: space-between; gap: 10px; align-items: center;
+        }
+        .item-main { min-width: 0; }
+        .item-title { font-weight: 600; color: #111827; }
+        .item-sub { color: #6b7280; font-size: 13px; }
+        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .empty { color: #6b7280; font-size: 14px; }
+        .msg { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
+        .msg.ok { background: #dcfce7; color: #166534; display: block; }
+        .msg.err { background: #fee2e2; color: #991b1b; display: block; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-container">
+        <div class="logo">
+            <h1><i class="fas fa-building"></i> 企业中心</h1>
+        </div>
+        <div class="header-actions">
+            <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <h1 class="page-title">项目发布与申请审核</h1>
+    <p class="page-desc">在这里可创建项目、添加角色，并审核学生申请。</p>
+
+    <div class="grid">
+        <section class="card">
+            <h2><i class="fas fa-plus-circle"></i> 发布项目</h2>
+            <div class="field">
+                <label>项目名称</label>
+                <input id="proj-name" placeholder="请输入项目名称">
+            </div>
+            <div class="field">
+                <label>项目描述</label>
+                <textarea id="proj-desc" placeholder="请输入项目描述"></textarea>
+            </div>
+            <div class="field">
+                <label>公司/机构名称</label>
+                <input id="proj-company" placeholder="默认使用账号中的学校/单位">
+            </div>
+            <div class="field">
+                <label>预计市场（可选）</label>
+                <input id="proj-expected-market" placeholder="例如：校园市场 / 文旅市场">
+            </div>
+            <div class="field">
+                <label>工作方式（可选）</label>
+                <input id="proj-work-mode" placeholder="例如：远程协作 / 线下驻场">
+            </div>
+            <div class="field">
+                <label>参与人数（可选）</label>
+                <input id="proj-participant-count" placeholder="例如：5-8人">
+            </div>
+            <div class="field">
+                <label>项目状态</label>
+                <select id="proj-status">
+                    <option value="招募中">招募中</option>
+                    <option value="进行中">进行中</option>
+                    <option value="已完成">已完成</option>
+                    <option value="已终止">已终止</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>截止时间（可选）</label>
+                <input id="proj-deadline" placeholder="例如：2026-12-31 23:59:59">
+            </div>
+            <button class="btn btn-primary" onclick="createProject()"><i class="fas fa-check"></i> 创建项目</button>
+            <div id="create-project-msg" class="msg"></div>
+        </section>
+
+        <section class="card">
+            <h2><i class="fas fa-user-cog"></i> 为项目添加角色</h2>
+            <div class="field">
+                <label>选择项目</label>
+                <select id="role-project-id"></select>
+            </div>
+            <div class="field">
+                <label>角色名称</label>
+                <input id="role-name" placeholder="例如：后端开发">
+            </div>
+            <div class="field">
+                <label>任务描述</label>
+                <textarea id="role-task" placeholder="角色主要任务"></textarea>
+            </div>
+            <div class="field">
+                <label>技能要求（逗号分隔）</label>
+                <input id="role-skills" placeholder="Python,Flask,SQL">
+            </div>
+            <div class="field">
+                <label>人数上限</label>
+                <input id="role-limit" type="number" min="1" value="1">
+            </div>
+            <div class="field">
+                <label>角色状态</label>
+                <select id="role-status">
+                    <option value="招募中">招募中</option>
+                    <option value="进行中">进行中</option>
+                    <option value="已完成">已完成</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="createRole()"><i class="fas fa-plus"></i> 添加角色</button>
+            <div id="create-role-msg" class="msg"></div>
+        </section>
+    </div>
+
+    <section class="card">
+        <h2><i class="fas fa-list-check"></i> 审核申请</h2>
+        <p class="hint">先选择项目与角色，再加载申请列表。仅 pending 状态可审核。</p>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 10px;">
+            <div class="field">
+                <label>项目</label>
+                <select id="review-project-id" onchange="loadRolesForReview()"></select>
+            </div>
+            <div class="field">
+                <label>角色</label>
+                <select id="review-role-id"></select>
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="loadApplications()"><i class="fas fa-download"></i> 加载申请</button>
+        <div id="applications-msg" class="msg"></div>
+        <div id="applications-list" class="list"></div>
+    </section>
+</main>
+
+<script>
+    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+    const userType = localStorage.getItem("user_type") || "";
+
+    function showMsg(id, ok, text) {
+        const el = document.getElementById(id);
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = options.headers || {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const data = await response.json();
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || "请求失败");
+        }
+        return data;
+    }
+
+    async function logout() {
+        const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+        if (authToken) {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${authToken}` }
+                });
+            } catch (_) {}
+        }
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("user_type");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    }
+
+    function asEnterprise() {
+        return ["企业", "浼佷笟", "enterprise", "Enterprise"].includes(userType);
+    }
+
+    async function loadEnterpriseProjects() {
+        const data = await apiFetch("/api/enterprise/projects");
+        return Array.isArray(data.projects) ? data.projects : [];
+    }
+
+    function renderProjectSelect(selectId, projects) {
+        const select = document.getElementById(selectId);
+        if (!projects.length) {
+            select.innerHTML = `<option value="">暂无项目</option>`;
+            return;
+        }
+        select.innerHTML = projects.map((p) => `<option value="${p.project_id}">${escapeHtml(p.project_name || `项目${p.project_id}`)}</option>`).join("");
+    }
+
+    async function createProject() {
+        const payload = {
+            project_name: document.getElementById("proj-name").value.trim(),
+            description: document.getElementById("proj-desc").value.trim(),
+            company: document.getElementById("proj-company").value.trim(),
+            expected_market: document.getElementById("proj-expected-market").value.trim(),
+            work_mode: document.getElementById("proj-work-mode").value.trim(),
+            participant_count: document.getElementById("proj-participant-count").value.trim(),
+            project_status: document.getElementById("proj-status").value.trim(),
+            deadline: document.getElementById("proj-deadline").value.trim() || null
+        };
+        if (!payload.project_name) {
+            showMsg("create-project-msg", false, "项目名称不能为空");
+            return;
+        }
+        try {
+            const data = await apiFetch("/api/enterprise/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            showMsg("create-project-msg", true, `创建成功，项目ID：${data.project_id}`);
+            await initPage();
+        } catch (err) {
+            showMsg("create-project-msg", false, err.message);
+        }
+    }
+
+    async function createRole() {
+        const projectId = document.getElementById("role-project-id").value;
+        const payload = {
+            role_name: document.getElementById("role-name").value.trim(),
+            task_desc: document.getElementById("role-task").value.trim(),
+            skill_require: document.getElementById("role-skills").value.trim(),
+            limit_num: Number(document.getElementById("role-limit").value || 1),
+            role_status: document.getElementById("role-status").value.trim()
+        };
+        if (!projectId) {
+            showMsg("create-role-msg", false, "请先选择项目");
+            return;
+        }
+        if (!payload.role_name || !payload.task_desc) {
+            showMsg("create-role-msg", false, "角色名称和任务描述不能为空");
+            return;
+        }
+        try {
+            const data = await apiFetch(`/api/enterprise/projects/${projectId}/roles`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            showMsg("create-role-msg", true, `角色创建成功，角色ID：${data.role_id}`);
+            await loadRolesForReview();
+        } catch (err) {
+            showMsg("create-role-msg", false, err.message);
+        }
+    }
+
+    async function loadRolesForReview() {
+        const projectId = document.getElementById("review-project-id").value;
+        const roleSelect = document.getElementById("review-role-id");
+        if (!projectId) {
+            roleSelect.innerHTML = `<option value="">请先选择项目</option>`;
+            return;
+        }
+        try {
+            const data = await apiFetch(`/api/enterprise/projects/${projectId}/roles`);
+            const roles = Array.isArray(data.roles) ? data.roles : [];
+            if (!roles.length) {
+                roleSelect.innerHTML = `<option value="">该项目暂无角色</option>`;
+                return;
+            }
+            roleSelect.innerHTML = roles.map((r) => `<option value="${r.role_id}">${escapeHtml(r.role_name || `角色${r.role_id}`)}</option>`).join("");
+        } catch (err) {
+            roleSelect.innerHTML = `<option value="">加载失败</option>`;
+            showMsg("applications-msg", false, err.message);
+        }
+    }
+
+    async function reviewApplication(applicationId, decision) {
+        try {
+            await apiFetch(`/api/enterprise/applications/${applicationId}/review`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ decision })
+            });
+            showMsg("applications-msg", true, `审核成功：${decision}`);
+            await loadApplications();
+        } catch (err) {
+            showMsg("applications-msg", false, err.message);
+        }
+    }
+
+    function appStatusText(status) {
+        if (status === "pending") return "待审核";
+        if (status === "accepted") return "已通过";
+        if (status === "rejected") return "已拒绝";
+        if (status === "cancelled") return "已撤回";
+        return status || "-";
+    }
+
+    async function loadApplications() {
+        const roleId = document.getElementById("review-role-id").value;
+        const list = document.getElementById("applications-list");
+        if (!roleId) {
+            list.innerHTML = `<div class="empty">请先选择角色</div>`;
+            return;
+        }
+        try {
+            const data = await apiFetch(`/api/enterprise/roles/${roleId}/applications`);
+            const applications = Array.isArray(data.applications) ? data.applications : [];
+            if (!applications.length) {
+                list.innerHTML = `<div class="empty">暂无申请记录</div>`;
+                return;
+            }
+            list.innerHTML = applications.map((app) => {
+                const canReview = app.status === "pending";
+                return `
+                    <div class="item">
+                        <div class="item-main">
+                            <div class="item-title">${escapeHtml(app.student_name || "-")} (${escapeHtml(app.real_name || "-")})</div>
+                            <div class="item-sub">状态：${escapeHtml(appStatusText(app.status))} | 时间：${escapeHtml(app.apply_time || "-")}</div>
+                            <div class="item-sub">动机：${escapeHtml(app.motivation || "无")}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-sm btn-accept" ${canReview ? "" : "disabled"} onclick="reviewApplication(${Number(app.application_id) || 0}, 'accepted')">通过</button>
+                            <button class="btn btn-sm btn-reject" ${canReview ? "" : "disabled"} onclick="reviewApplication(${Number(app.application_id) || 0}, 'rejected')">拒绝</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        } catch (err) {
+            list.innerHTML = `<div class="empty">加载失败</div>`;
+            showMsg("applications-msg", false, err.message);
+        }
+    }
+
+    async function initPage() {
+        if (!token) {
+            alert("请先登录企业账号");
+            window.location.href = "login.html";
+            return;
+        }
+        if (!asEnterprise()) {
+            alert("只有企业账号可访问企业中心");
+            window.location.href = "project_list.html";
+            return;
+        }
+
+        try {
+            const projects = await loadEnterpriseProjects();
+            renderProjectSelect("role-project-id", projects);
+            renderProjectSelect("review-project-id", projects);
+            await loadRolesForReview();
+            document.getElementById("applications-list").innerHTML = `<div class="empty">请选择角色后点击“加载申请”</div>`;
+        } catch (err) {
+            showMsg("applications-msg", false, err.message);
+        }
+    }
+
+    window.createProject = createProject;
+    window.createRole = createRole;
+    window.loadRolesForReview = loadRolesForReview;
+    window.loadApplications = loadApplications;
+    window.reviewApplication = reviewApplication;
+    window.logout = logout;
+
+    initPage();
+</script>
+</body>
+</html>

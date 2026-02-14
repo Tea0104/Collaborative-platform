@@ -547,6 +547,10 @@
         return currentProjectApplications.find((item) => Number(item.role_id) === Number(roleId));
     }
 
+    function canReapplyWithStatus(status) {
+        return ["cancelled", "rejected"].includes(String(status || "").toLowerCase());
+    }
+
     function roleStatusClass(role) {
         return Number(role.join_num || 0) >= Number(role.limit_num || 0) ? "status-full" : "status-available";
     }
@@ -625,7 +629,8 @@
         container.innerHTML = roles.map((role) => {
             const myApp = getMyApplication(role.role_id);
             const isFull = Number(role.join_num || 0) >= Number(role.limit_num || 0);
-            const canApply = isStudentUser() && isRecruitingStatus(role.role_status) && !isFull && !myApp;
+            const noBlockingApplication = !myApp || canReapplyWithStatus(myApp.status);
+            const canApply = isStudentUser() && isRecruitingStatus(role.role_status) && !isFull && noBlockingApplication;
 
             const requirements = String(role.skill_require || "暂无")
                 .split(/[，,\/]/)
@@ -635,7 +640,9 @@
                 .map((item) => `<li>${escapeHtml(item)}</li>`)
                 .join("") || "<li>暂无</li>";
 
-            const btnText = myApp ? `已申请 (${badgeText(myApp.status)})` : "申请加入";
+            const btnText = myApp
+                ? (canReapplyWithStatus(myApp.status) ? `再次申请 (${badgeText(myApp.status)})` : `已申请 (${badgeText(myApp.status)})`)
+                : "申请加入";
 
             return `
                 <div class="role-card">

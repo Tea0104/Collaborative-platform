@@ -314,7 +314,7 @@
 <nav>
     <div class="container nav-container">
         <a href="project_list.html" class="nav-link active"><i class="fas fa-project-diagram"></i> 项目列表</a>
-        <a href="#" class="nav-link"><i class="fas fa-briefcase"></i> 我的申请</a>
+        <a href="#" class="nav-link" id="nav-action-link"><i class="fas fa-briefcase"></i> 我的申请</a>
         <a href="#" class="nav-link"><i class="fas fa-history"></i> 参与记录</a>
         <a href="#" class="nav-link"><i class="fas fa-user-circle"></i> 个人中心</a>
     </div>
@@ -400,6 +400,16 @@
         </div>
         <div class="projects-grid" id="projects-container"></div>
     </section>
+
+    <section class="projects-section" id="my-apps-section" style="display: none;">
+        <div class="projects-header">
+            <div class="section-title">
+                <i class="fas fa-briefcase"></i>
+                <h2>我的申请</h2>
+            </div>
+        </div>
+        <div class="projects-grid" id="my-apps-container"></div>
+    </section>
 </main>
 
 <footer>
@@ -431,6 +441,7 @@
     </div>
     <div class="copyright">
         <p>© 2026 多角色共创平台 保留所有权利</p>
+        <p style="margin-top: 8px; font-size: 12px;">能力成长 + 可验证成果 = 职业竞争力</p>
     </div>
 </footer>
 
@@ -462,6 +473,27 @@
     function setCurrentUserDisplay(username, userType) {
         const userText = username && userType ? `${username} (${userType})` : "未登录";
         document.getElementById("current-user").innerHTML = `<i class="fas fa-user"></i> ${escapeHtml(userText)}`;
+    }
+
+    function isStudentUser() {
+        const t = (localStorage.getItem("user_type") || "").trim();
+        return ["学生", "瀛︾敓", "student", "Student"].includes(t);
+    }
+
+    function isEnterpriseUser() {
+        const t = (localStorage.getItem("user_type") || "").trim();
+        return ["企业", "浼佷笟", "enterprise", "Enterprise"].includes(t);
+    }
+
+    function updateNavActionLink() {
+        const link = document.getElementById("nav-action-link");
+        if (isEnterpriseUser()) {
+            link.href = "enterprise_center.html";
+            link.innerHTML = `<i class="fas fa-building"></i> 企业中心`;
+            return;
+        }
+        link.href = "my_applications.html";
+        link.innerHTML = `<i class="fas fa-briefcase"></i> 我的申请`;
     }
 
     async function logout() {
@@ -536,6 +568,9 @@
             const status = escapeHtml(project.project_status || "-");
             const publishTime = escapeHtml(formatDate(project.publish_time));
             const deadline = escapeHtml(formatDate(project.deadline));
+            const expectedMarket = escapeHtml(project.expected_market || "未设置");
+            const workMode = escapeHtml(project.work_mode || "未设置");
+            const participantCount = escapeHtml(project.participant_count || "未设置");
             const projectId = Number(project.project_id) || 0;
 
             return `
@@ -551,12 +586,20 @@
                         <p class="project-description">${description}</p>
                         <div class="project-details">
                             <div class="detail-item">
-                                <span class="detail-label">发布时间</span>
-                                <span class="detail-value">${publishTime}</span>
-                            </div>
-                            <div class="detail-item">
                                 <span class="detail-label">截止时间</span>
                                 <span class="detail-value">${deadline}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">预计市场</span>
+                                <span class="detail-value">${expectedMarket}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">工作方式</span>
+                                <span class="detail-value">${workMode}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">参与人数</span>
+                                <span class="detail-value">${participantCount}</span>
                             </div>
                         </div>
                     </div>
@@ -603,6 +646,64 @@
         loadProjects();
     }
 
+    function renderMyApplications(apps) {
+        const section = document.getElementById("my-apps-section");
+        const container = document.getElementById("my-apps-container");
+        if (!isStudentUser() || !token) {
+            section.style.display = "none";
+            return;
+        }
+        section.style.display = "block";
+        if (!apps.length) {
+            container.innerHTML = '<div class="empty">暂无申请记录</div>';
+            return;
+        }
+        container.innerHTML = apps.map((app) => `
+            <div class="project-card">
+                <div class="project-header">
+                    <h3 class="project-title">${escapeHtml(app.project_name || "-")}</h3>
+                    <div class="project-org"><i class="fas fa-user-tag"></i> ${escapeHtml(app.role_name || "-")}</div>
+                    <div class="project-tags">
+                        <span class="tag tag-status">${escapeHtml(app.status || "-")}</span>
+                    </div>
+                </div>
+                <div class="project-body">
+                    <p class="project-description">${escapeHtml(app.motivation || "无申请说明")}</p>
+                    <div class="project-details">
+                        <div class="detail-item">
+                            <span class="detail-label">申请时间</span>
+                            <span class="detail-value">${escapeHtml(formatDate(app.apply_time))}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">项目ID</span>
+                            <span class="detail-value">${escapeHtml(String(app.project_id || "-"))}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function loadMyApplications() {
+        if (!isStudentUser() || !token) {
+            renderMyApplications([]);
+            return;
+        }
+        try {
+            const response = await fetch(`${API_BASE}/api/student/applications`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (!response.ok || data.success === false) {
+                throw new Error(data.message || "申请列表加载失败");
+            }
+            const apps = Array.isArray(data.applications) ? data.applications : [];
+            renderMyApplications(apps);
+        } catch (_) {
+            renderMyApplications([]);
+        }
+    }
+
     async function initCurrentUser() {
         const localName = localStorage.getItem("username");
         const localType = localStorage.getItem("user_type");
@@ -621,15 +722,18 @@
                 localStorage.setItem("username", name);
                 localStorage.setItem("user_type", type);
                 setCurrentUserDisplay(name, type);
+                updateNavActionLink();
+                loadMyApplications();
             }
         } catch (_) {
         }
     }
 
+    updateNavActionLink();
     initCurrentUser();
     loadProjects();
+    document.getElementById("my-apps-section").style.display = "none";
 </script>
 </body>
 </html>
-
 

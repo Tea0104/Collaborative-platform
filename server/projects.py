@@ -46,6 +46,9 @@ def enterprise_create_project():
     project_status = (data.get("project_status") or "招募中").strip()
     deadline = data.get("deadline")
     result_url = (data.get("result_url") or "").strip()
+    expected_market = (data.get("expected_market") or "").strip()
+    work_mode = (data.get("work_mode") or "").strip()
+    participant_count = (data.get("participant_count") or "").strip()
 
     if not project_name:
         return jsonify({"success": False, "message": "project_name 不能为空"}), 400
@@ -62,6 +65,9 @@ def enterprise_create_project():
         project_status=project_status,
         deadline=deadline,
         result_url=result_url,
+        expected_market=expected_market,
+        work_mode=work_mode,
+        participant_count=participant_count,
     )
     if res["code"] != 200:
         return jsonify({"success": False, "message": res["msg"]}), 400
@@ -75,7 +81,17 @@ def enterprise_update_project(project_id: int):
     user_id = request.current_user["user_id"]
     data = request.json or {}
 
-    allow_fields = {"project_name", "description", "project_status", "deadline", "result_url", "company"}
+    allow_fields = {
+        "project_name",
+        "description",
+        "project_status",
+        "deadline",
+        "result_url",
+        "expected_market",
+        "work_mode",
+        "participant_count",
+        "company",
+    }
     update_fields = {k: v for k, v in data.items() if k in allow_fields}
     if not update_fields:
         return jsonify({"success": True, "message": "无可更新字段"})
