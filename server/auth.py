@@ -6,14 +6,24 @@ from typing import Callable, Optional
 from flask import Blueprint, jsonify, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .db import (
-    get_user_by_token,
-    get_user_by_username,
-    save_token,
-    delete_token,
-    user_add,
-    user_update,
-)
+try:
+    from .db import (
+        get_user_by_token,
+        get_user_by_username,
+        save_token,
+        delete_token,
+        user_add,
+        user_update,
+    )
+except ImportError:
+    from db import (
+        get_user_by_token,
+        get_user_by_username,
+        save_token,
+        delete_token,
+        user_add,
+        user_update,
+    )
 
 
 auth_bp = Blueprint("auth", __name__)

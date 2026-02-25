@@ -1,10 +1,17 @@
 from flask import Flask
 from flask_cors import CORS
 
-from .applications import applications_bp
-from .auth import auth_bp
-from .db import init_database, seed_demo_data_if_empty
-from .projects import projects_bp
+try:
+    from .applications import applications_bp
+    from .auth import auth_bp
+    from .db import init_database, seed_demo_data_if_empty
+    from .projects import projects_bp
+except ImportError:
+    # Fallback for environments that execute files directly instead of package mode.
+    from applications import applications_bp
+    from auth import auth_bp
+    from db import init_database, seed_demo_data_if_empty
+    from projects import projects_bp
 
 
 

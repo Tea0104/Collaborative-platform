@@ -1,13 +1,23 @@
 from flask import Blueprint, jsonify, request
 
-from .auth import login_required, role_required
-from .db import (
-    apply_for_role,
-    cancel_application,
-    list_role_applications,
-    list_student_applications,
-    review_application,
-)
+try:
+    from .auth import login_required, role_required
+    from .db import (
+        apply_for_role,
+        cancel_application,
+        list_role_applications,
+        list_student_applications,
+        review_application,
+    )
+except ImportError:
+    from auth import login_required, role_required
+    from db import (
+        apply_for_role,
+        cancel_application,
+        list_role_applications,
+        list_student_applications,
+        review_application,
+    )
 
 
 applications_bp = Blueprint("applications", __name__)

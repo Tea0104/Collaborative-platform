@@ -1,18 +1,33 @@
 from flask import Blueprint, jsonify, request
 
-from .auth import login_required, role_required
-from .db import (
-    get_project,
-    get_role,
-    get_user,
-    list_projects_by_publisher,
-    list_public_projects,
-    list_roles_by_project,
-    project_add,
-    project_update,
-    role_add,
-    role_update,
-)
+try:
+    from .auth import login_required, role_required
+    from .db import (
+        get_project,
+        get_role,
+        get_user,
+        list_projects_by_publisher,
+        list_public_projects,
+        list_roles_by_project,
+        project_add,
+        project_update,
+        role_add,
+        role_update,
+    )
+except ImportError:
+    from auth import login_required, role_required
+    from db import (
+        get_project,
+        get_role,
+        get_user,
+        list_projects_by_publisher,
+        list_public_projects,
+        list_roles_by_project,
+        project_add,
+        project_update,
+        role_add,
+        role_update,
+    )
 
 
 projects_bp = Blueprint("projects", __name__)
