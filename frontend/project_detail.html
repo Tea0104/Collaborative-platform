@@ -463,7 +463,7 @@
 </footer>
 
 <script>
-    const API_BASE = localStorage.getItem("api_base") || "http://127.0.0.1:5000";
+    const API_BASE = (localStorage.getItem("api_base") || "").trim();
     const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
     const userType = localStorage.getItem("user_type") || "";
     const projectId = new URLSearchParams(window.location.search).get("id");
