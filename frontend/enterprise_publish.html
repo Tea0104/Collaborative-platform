@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目发布 - 企业中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles/theme.css">
+    <link rel="stylesheet" href="./styles/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+        body { background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        header { background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%); color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,.1); position: sticky; top: 0; z-index: 100; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .back-link { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .logout-btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.35); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+        .page-title { margin: 24px 0 8px; font-size: 28px; color: #1f2937; }
+        .page-desc { color: #6b7280; margin-bottom: 18px; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); margin-bottom: 24px; }
+        .card h2 { font-size: 20px; color: #2563eb; margin-bottom: 14px; }
+        .field { margin-bottom: 10px; }
+        .field label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 6px; }
+        .field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+        .field textarea { min-height: 80px; resize: vertical; }
+        .btn { border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .msg { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
+        .msg.ok { background: #dcfce7; color: #166534; display: block; }
+        .msg.err { background: #fee2e2; color: #991b1b; display: block; }
+    </style>
+</head>
+<body class="page">
+<header>
+    <div class="container header-container">
+        <div class="logo">
+            <h1><i class="fas fa-building"></i> 企业中心</h1>
+        </div>
+        <div class="header-actions">
+            <a class="back-link" href="/enterprisecenter"><i class="fas fa-arrow-left"></i> 返回企业中心首页</a>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        </div>
+    </div>
+</header>
+
+<main class="container page-container">
+    <h1 class="page-title">项目发布</h1>
+    <p class="page-desc">创建新的项目并发布招募信息。</p>
+
+    <section class="card">
+        <h2><i class="fas fa-plus-circle"></i> 发布项目</h2>
+        <div class="field">
+            <label>项目名称</label>
+            <input id="proj-name" placeholder="请输入项目名称">
+        </div>
+        <div class="field">
+            <label>项目描述</label>
+            <textarea id="proj-desc" placeholder="请输入项目描述"></textarea>
+        </div>
+        <div class="field">
+            <label>公司/机构名称</label>
+            <input id="proj-company" placeholder="默认使用账号中的学校/单位">
+        </div>
+        <div class="field">
+            <label>预计市场（可选）</label>
+            <input id="proj-expected-market" placeholder="例如：校园市场 / 文旅市场">
+        </div>
+        <div class="field">
+            <label>工作方式（可选）</label>
+            <input id="proj-work-mode" placeholder="例如：远程协作 / 线下驻场">
+        </div>
+        <div class="field">
+            <label>参与人数（可选）</label>
+            <input id="proj-participant-count" placeholder="例如：5-8人">
+        </div>
+        <div class="field">
+            <label>项目状态</label>
+            <select id="proj-status">
+                <option value="招募中">招募中</option>
+                <option value="进行中">进行中</option>
+                <option value="已完成">已完成</option>
+                <option value="已终止">已终止</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>截止时间（可选）</label>
+            <input id="proj-deadline" placeholder="YYYY-MM-DD HH:mm:ss">
+        </div>
+        <button class="btn btn-primary" onclick="createProject()"><i class="fas fa-check"></i> 发布项目</button>
+        <div id="create-project-msg" class="msg"></div>
+    </section>
+</main>
+
+<script src="./js/common.js"></script>
+<script>
+    const API_BASE = (() => {
+        const configured = (localStorage.getItem("api_base") || "").trim();
+        if (configured) return configured;
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+        return "";
+    })();
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+    const userType = localStorage.getItem("user_type") || "";
+
+    function showMsg(id, ok, text) {
+        const el = document.getElementById(id);
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function asEnterprise() {
+        return ["企业", "company", "Company"].includes(userType);
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = options.headers || {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const data = await response.json();
+        if (!response.ok || data.success === false) throw new Error(data.message || "请求失败");
+        return data;
+    }
+
+    async function logout() {
+        const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+        if (authToken) {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", headers: { Authorization: `Bearer ${authToken}` } });
+            } catch (_) {}
+        }
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("user_type");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    }
+
+    async function createProject() {
+        const payload = {
+            project_name: document.getElementById("proj-name").value.trim(),
+            description: document.getElementById("proj-desc").value.trim(),
+            company: document.getElementById("proj-company").value.trim(),
+            expected_market: document.getElementById("proj-expected-market").value.trim(),
+            work_mode: document.getElementById("proj-work-mode").value.trim(),
+            participant_count: document.getElementById("proj-participant-count").value.trim(),
+            project_status: document.getElementById("proj-status").value.trim(),
+            deadline: document.getElementById("proj-deadline").value.trim()
+        };
+        if (!payload.project_name) {
+            showMsg("create-project-msg", false, "项目名称不能为空");
+            return;
+        }
+        try {
+            const data = await apiFetch("/api/enterprise/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            showMsg("create-project-msg", true, `项目发布成功，项目ID：${data.project_id}`);
+        } catch (err) {
+            showMsg("create-project-msg", false, err.message);
+        }
+    }
+
+    function initPage() {
+        if (!token) {
+            alert("请先登录企业账号");
+            window.location.href = "login.html";
+            return;
+        }
+        if (!asEnterprise()) {
+            alert("只有企业账号可以访问企业中心");
+            window.location.href = "project_list.html";
+        }
+    }
+
+    window.createProject = createProject;
+    window.logout = logout;
+    initPage();
+</script>
+</body>
+</html>
