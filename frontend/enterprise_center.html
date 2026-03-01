@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="./styles/components.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
-        body { background: #f5f7fa; color: #333; line-height: 1.6; }
+        body.page { background: #f5f7fa; color: #333; line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         header { background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%); color: #fff; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,.1); position: sticky; top: 0; z-index: 100; }
         .header-container { display: flex; justify-content: space-between; align-items: center; }
@@ -19,7 +19,7 @@
         .logout-btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.35); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
         .page-title { margin: 24px 0 8px; font-size: 28px; color: #1f2937; }
         .page-desc { color: #6b7280; margin-bottom: 18px; }
-        .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 24px; }
+        .section { margin-bottom: 24px; }
         .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
         .card h2 { font-size: 20px; color: #2563eb; margin-bottom: 14px; }
         .list { margin-top: 10px; display: grid; gap: 10px; }
@@ -31,8 +31,8 @@
         .btn { border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
         .btn-primary { background: #2563eb; color: #fff; }
         .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #eef2ff; color: #1d4ed8; }
-        .btn-secondary:hover { background: #dbeafe; }
+        .btn-outline { background: #eef2ff; color: #1d4ed8; }
+        .btn-outline:hover { background: #dbeafe; }
         .btn-sm { padding: 6px 10px; font-size: 12px; }
         .entry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
         .entry-link { border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; border-radius: 10px; padding: 14px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; }
@@ -51,7 +51,7 @@
         </div>
         <div class="header-actions">
             <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
+            <button class="logout-btn btn btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
 </header>
@@ -60,7 +60,7 @@
     <h1 class="page-title">企业中心首页</h1>
     <p class="page-desc">请选择入口，或直接管理你已发布的项目。</p>
 
-    <section class="card" style="margin-bottom: 24px;">
+    <section class="card section">
         <h2><i class="fas fa-compass"></i> 导航入口</h2>
         <div class="entry-grid">
             <a class="entry-link" href="/enterprisecenter/publish"><i class="fas fa-plus-circle"></i> 项目发布</a>
@@ -69,7 +69,7 @@
         </div>
     </section>
 
-    <section class="card">
+    <section class="card section">
         <h2><i class="fas fa-list"></i> 我发布的项目</h2>
         <div id="projects-list" class="list"></div>
         <div id="projects-msg" class="msg"></div>
@@ -78,23 +78,46 @@
 
 <script src="./js/common.js"></script>
 <script>
-    const API_BASE = (() => {
-        const configured = (localStorage.getItem("api_base") || "").trim();
-        if (configured) return configured;
-        const host = window.location.hostname;
-        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
-        return "";
-    })();
-    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+    const API_BASE = (window.CP && window.CP.getApiBase)
+        ? window.CP.getApiBase()
+        : (() => {
+            const configured = (localStorage.getItem("api_base") || "").trim();
+            if (configured) return configured;
+            const host = window.location.hostname;
+            if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+            return "";
+        })();
+    const token = (window.CP && window.CP.getToken)
+        ? window.CP.getToken()
+        : (localStorage.getItem("auth_token") || localStorage.getItem("token") || "");
     const userType = localStorage.getItem("user_type") || "";
+    const escapeHtml = (window.CP && window.CP.escapeHtml)
+        ? window.CP.escapeHtml
+        : function(value) {
+            return String(value || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        };
+    const formatDate = (window.CP && window.CP.formatDate)
+        ? window.CP.formatDate
+        : function(value) {
+            if (!value) return "-";
+            const d = new Date(String(value).replace(" ", "T"));
+            if (Number.isNaN(d.getTime())) return String(value);
+            return d.toLocaleString("zh-CN", { hour12: false });
+        };
 
-    function escapeHtml(value) {
-        return String(value || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/\"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+    function showMsg(id, ok, text) {
+        const el = document.getElementById(id);
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function asEnterprise() {
+        return ["企业", "company", "Company"].includes(userType);
     }
 
     function showMsg(id, ok, text) {
@@ -133,13 +156,6 @@
         window.location.href = "login.html";
     }
 
-    function formatDate(value) {
-        if (!value) return "-";
-        const d = new Date(String(value).replace(" ", "T"));
-        if (Number.isNaN(d.getTime())) return String(value);
-        return d.toLocaleString("zh-CN", { hour12: false });
-    }
-
     function renderProjectList(projects) {
         const list = document.getElementById("projects-list");
         if (!projects.length) {
@@ -149,14 +165,14 @@
         list.innerHTML = projects.map((project) => {
             const projectId = Number(project.project_id) || 0;
             return `
-                <div class="item">
+                <div class="item card">
                     <div class="item-main">
                         <div class="item-title">${escapeHtml(project.project_name || `项目${projectId}`)}</div>
                         <div class="item-sub">状态：${escapeHtml(project.project_status || "-")} | 发布时间：${escapeHtml(formatDate(project.publish_time))}</div>
                         <div class="item-sub">截止时间：${escapeHtml(formatDate(project.deadline))} | 公司：${escapeHtml(project.company || "-")}</div>
                     </div>
                     <div class="item-actions">
-                        <a class="btn btn-sm btn-secondary" href="/enterprisecenter/projects/${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
+                        <a class="btn btn-sm btn-outline" href="/enterprisecenter/projects/${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
                     </div>
                 </div>
             `;
