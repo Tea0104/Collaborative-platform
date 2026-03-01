@@ -120,6 +120,16 @@
         return ["企业", "company", "Company"].includes(userType);
     }
 
+    function showMsg(id, ok, text) {
+        const el = document.getElementById(id);
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function asEnterprise() {
+        return ["企业", "company", "Company"].includes(userType);
+    }
+
     async function apiFetch(path, options = {}) {
         const headers = options.headers || {};
         if (token) headers.Authorization = `Bearer ${token}`;
