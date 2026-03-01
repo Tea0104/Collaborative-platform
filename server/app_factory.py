@@ -1,4 +1,6 @@
-from flask import Flask, jsonify, request
+import os
+
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 try:
@@ -14,10 +16,10 @@ except ImportError:
     from projects import projects_bp
 
 
-
 def create_app() -> Flask:
     app = Flask(__name__)
     app.json.ensure_ascii = False
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 
     # CORS（保持你原来的行为：允许任意来源）
     CORS(app)
@@ -37,12 +39,20 @@ def create_app() -> Flask:
         return None
 
     @app.get("/")
+    def index_page():
+        return send_from_directory(frontend_dir, "index.html")
+
+    @app.get("/health")
     def health_check():
         return jsonify({"success": True, "message": "backend is running"})
 
     @app.get("/favicon.ico")
     def favicon():
         return "", 204
+
+    @app.get("/<path:filename>")
+    def frontend_file(filename: str):
+        return send_from_directory(frontend_dir, filename)
 
     # DB init/migrate + demo data
     init_database()
