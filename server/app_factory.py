@@ -16,7 +16,6 @@ except ImportError:
     from projects import projects_bp
 
 
-
 def create_app() -> Flask:
     app = Flask(__name__)
     app.json.ensure_ascii = False
