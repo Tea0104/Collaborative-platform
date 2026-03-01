@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>企业中心 - 多角色共创平台</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles/theme.css">
+    <link rel="stylesheet" href="./styles/components.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
         body { background: #f5f7fa; color: #333; line-height: 1.6; }
@@ -41,7 +43,7 @@
         .msg.err { background: #fee2e2; color: #991b1b; display: block; }
     </style>
 </head>
-<body>
+<body class="page">
 <header>
     <div class="container header-container">
         <div class="logo">
@@ -54,7 +56,7 @@
     </div>
 </header>
 
-<main class="container">
+<main class="container page-container">
     <h1 class="page-title">企业中心首页</h1>
     <p class="page-desc">请选择入口，或直接管理你已发布的项目。</p>
 
@@ -74,6 +76,7 @@
     </section>
 </main>
 
+<script src="./js/common.js"></script>
 <script>
     const API_BASE = (() => {
         const configured = (localStorage.getItem("api_base") || "").trim();
