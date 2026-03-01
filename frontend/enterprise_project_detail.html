@@ -28,11 +28,81 @@
         .list { margin-top: 10px; display: grid; gap: 10px; }
         .item { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
         .item-title { font-weight: 600; color: #111827; }
-        .item-sub { color: #6b7280; font-size: 13px; }
+        .item-sub { color: #6b7280; font-size: 13px; margin-top: 4px; }
         .empty { color: #6b7280; font-size: 14px; }
         .msg { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
         .msg.ok { background: #dcfce7; color: #166534; display: block; }
         .msg.err { background: #fee2e2; color: #991b1b; display: block; }
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .section-head h2 { margin: 0; }
+        .btn.btn-inline { width: auto; }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 20px;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-panel {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25);
+            padding: 20px;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .modal-title { font-size: 22px; font-weight: 700; color: #0f172a; }
+        .modal-desc { color: #64748b; font-size: 14px; margin-bottom: 14px; }
+        .suggest-list { display: grid; gap: 12px; }
+        .suggest-card.card { margin-bottom: 0; }
+        .suggest-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .suggest-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 12px;
+        }
+
+        .full-row { grid-column: 1 / -1; }
+        .checkline { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .header-container { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .suggest-grid { grid-template-columns: 1fr; }
+            .modal-panel { padding: 14px; }
+        }
     </style>
 </head>
 <body class="page">
@@ -50,7 +120,7 @@
 
 <main class="container page-container">
     <h1 class="page-title">项目详情</h1>
-    <p class="page-desc">查看项目基础信息与角色/任务列表。</p>
+    <p class="page-desc">查看项目基础信息与角色任务列表。</p>
 
     <section class="card">
         <h2><i class="fas fa-folder-open"></i> 项目基础信息</h2>
@@ -59,23 +129,57 @@
     </section>
 
     <section class="card">
-        <h2><i class="fas fa-users"></i> 角色/任务列表</h2>
+        <div class="section-head">
+            <h2><i class="fas fa-users"></i> 角色/任务列表</h2>
+            <button id="btn-ai-suggest" class="btn btn-primary btn-inline" type="button">
+                <i class="fas fa-wand-magic-sparkles"></i> AI 生成职责划分
+            </button>
+        </div>
         <div id="roles-list" class="list"></div>
         <div id="roles-msg" class="msg"></div>
     </section>
 </main>
 
+<div id="ai-suggest-modal" class="modal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
+        <div class="modal-head">
+            <div id="ai-modal-title" class="modal-title">AI 职责划分预览</div>
+            <button id="btn-ai-close-top" class="btn btn-outline btn-inline" type="button">
+                <i class="fas fa-xmark"></i> 关闭
+            </button>
+        </div>
+        <p class="modal-desc">可编辑建议后再决定是否采用。当前“采用所选”仅保留 UI，下一版本上线。</p>
+        <div id="ai-suggest-list" class="suggest-list"></div>
+        <div id="ai-suggest-msg" class="msg"></div>
+        <div class="modal-actions">
+            <button id="btn-ai-preview-only" class="btn btn-secondary btn-inline" type="button">
+                <i class="fas fa-eye"></i> 仅预览
+            </button>
+            <button id="btn-ai-apply" class="btn btn-primary btn-inline" type="button" disabled title="下一版本上线">
+                <i class="fas fa-check"></i> 采用所选（下一版本上线）
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="./js/common.js"></script>
 <script>
-    const API_BASE = (() => {
-        const configured = (localStorage.getItem("api_base") || "").trim();
-        if (configured) return configured;
-        const host = window.location.hostname;
-        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
-        return "";
-    })();
-    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+    const API_BASE = (window.CP && window.CP.getApiBase)
+        ? window.CP.getApiBase()
+        : (() => {
+            const configured = (localStorage.getItem("api_base") || "").trim();
+            if (configured) return configured;
+            const host = window.location.hostname;
+            if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+            return "";
+        })();
+    const token = (window.CP && window.CP.getToken)
+        ? window.CP.getToken()
+        : (localStorage.getItem("auth_token") || localStorage.getItem("token") || "");
     const userType = localStorage.getItem("user_type") || "";
+
+    let currentProjectId = 0;
+    let aiSuggestedRoles = [];
 
     function escapeHtml(value) {
         return String(value || "")
@@ -92,8 +196,14 @@
         el.textContent = text;
     }
 
+    function hideMsg(id) {
+        const el = document.getElementById(id);
+        el.className = "msg";
+        el.textContent = "";
+    }
+
     function asEnterprise() {
-        return ["企业", "company", "Company"].includes(userType);
+        return ["企业", "company", "Company", "enterprise", "Enterprise", "浼佷笟"].includes(userType);
     }
 
     function formatDate(value) {
@@ -106,16 +216,33 @@
     function getProjectIdFromLocation() {
         const pathMatch = window.location.pathname.match(/\/enterprisecenter\/projects\/(\d+)/);
         if (pathMatch) return Number(pathMatch[1]) || 0;
-        const queryId = Number(new URLSearchParams(window.location.search).get("projectId") || 0);
-        return queryId;
+
+        const params = new URLSearchParams(window.location.search);
+        return Number(
+            params.get("project_id") ||
+            params.get("projectId") ||
+            params.get("id") ||
+            0
+        ) || 0;
     }
 
     async function apiFetch(path, options = {}) {
         const headers = options.headers || {};
         if (token) headers.Authorization = `Bearer ${token}`;
         const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-        const data = await response.json();
-        if (!response.ok || data.success === false) throw new Error(data.message || "请求失败");
+        const text = await response.text();
+        let data = {};
+
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (_) {
+            const hint = `${response.status} ${response.statusText}`.trim();
+            throw new Error(`服务返回非 JSON（${hint}），请检查 API_BASE/路由：${API_BASE || "(empty)"}${path}`);
+        }
+
+        if (!response.ok || data.success === false || (typeof data.code === "number" && data.code !== 200)) {
+            throw new Error(data.message || data.msg || "请求失败");
+        }
         return data;
     }
 
@@ -169,18 +296,140 @@
         `).join("");
     }
 
+    function openAiModal() {
+        document.getElementById("ai-suggest-modal").classList.add("show");
+        document.getElementById("ai-suggest-modal").setAttribute("aria-hidden", "false");
+    }
+
+    function closeAiModal() {
+        document.getElementById("ai-suggest-modal").classList.remove("show");
+        document.getElementById("ai-suggest-modal").setAttribute("aria-hidden", "true");
+    }
+
+    function toDateTimeLocal(value) {
+        if (!value) return "";
+        const text = String(value).trim();
+        if (text.includes("T")) return text.slice(0, 16);
+        if (text.includes(" ")) return text.replace(" ", "T").slice(0, 16);
+        return text;
+    }
+
+    function bindAiSuggestInputEvents() {
+        const wrapper = document.getElementById("ai-suggest-list");
+        wrapper.querySelectorAll("[data-index][data-field]").forEach((input) => {
+            input.addEventListener("input", (event) => {
+                const idx = Number(event.target.getAttribute("data-index"));
+                const field = event.target.getAttribute("data-field");
+                if (!Number.isInteger(idx) || idx < 0 || idx >= aiSuggestedRoles.length) return;
+                aiSuggestedRoles[idx][field] = event.target.value;
+            });
+        });
+        wrapper.querySelectorAll("[data-index][data-checked]").forEach((checkbox) => {
+            checkbox.addEventListener("change", (event) => {
+                const idx = Number(event.target.getAttribute("data-index"));
+                if (!Number.isInteger(idx) || idx < 0 || idx >= aiSuggestedRoles.length) return;
+                aiSuggestedRoles[idx].selected = !!event.target.checked;
+            });
+        });
+    }
+
+    function renderAiSuggestRoles(roles) {
+        const container = document.getElementById("ai-suggest-list");
+        if (!Array.isArray(roles) || !roles.length) {
+            container.innerHTML = '<div class="card suggest-card"><div class="empty">暂无 AI 建议结果</div></div>';
+            return;
+        }
+
+        container.innerHTML = roles.map((role, index) => `
+            <div class="card suggest-card">
+                <div class="suggest-head">
+                    <strong>建议角色 #${index + 1}</strong>
+                    <label class="checkline">
+                        <input type="checkbox" data-index="${index}" data-checked="1" ${role.selected ? "checked" : ""}>
+                        是否采用
+                    </label>
+                </div>
+                <div class="suggest-grid">
+                    <div class="form-group">
+                        <label class="label">role_name</label>
+                        <input class="input" type="text" data-index="${index}" data-field="role_name" value="${escapeHtml(role.role_name || "")}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">limit_num</label>
+                        <input class="input" type="number" min="1" max="3" data-index="${index}" data-field="limit_num" value="${escapeHtml(role.limit_num || 1)}">
+                    </div>
+                    <div class="form-group full-row">
+                        <label class="label">task_desc</label>
+                        <textarea class="textarea" rows="3" data-index="${index}" data-field="task_desc">${escapeHtml(role.task_desc || "")}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">task_deadline</label>
+                        <input class="input" type="datetime-local" data-index="${index}" data-field="task_deadline" value="${escapeHtml(toDateTimeLocal(role.task_deadline))}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">skill_require（只读）</label>
+                        <input class="input" type="text" value="${escapeHtml(role.skill_require || "")}" readonly>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+
+        bindAiSuggestInputEvents();
+    }
+
+    async function openAiSuggestPreview() {
+        if (!currentProjectId) {
+            alert("缺少 project_id，无法生成建议");
+            return;
+        }
+
+        hideMsg("ai-suggest-msg");
+        openAiModal();
+        const listBox = document.getElementById("ai-suggest-list");
+        listBox.innerHTML = '<div class="card suggest-card"><div class="empty">正在生成，请稍候...</div></div>';
+
+        try {
+            const data = await apiFetch(`/api/projects/${currentProjectId}/roles/ai-suggest`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}"
+            });
+            if (data.code && Number(data.code) !== 200) {
+                throw new Error(data.msg || "AI 建议生成失败");
+            }
+            const roles = (((data || {}).data || {}).roles);
+            aiSuggestedRoles = (Array.isArray(roles) ? roles : []).map((item) => ({ ...item, selected: true }));
+            renderAiSuggestRoles(aiSuggestedRoles);
+        } catch (err) {
+            showMsg("ai-suggest-msg", false, err.message || "AI 建议生成失败");
+            listBox.innerHTML = '<div class="card suggest-card"><div class="empty">加载失败，请重试</div></div>';
+        }
+    }
+
     async function loadProjectAndRoles(projectId) {
         const projData = await apiFetch("/api/enterprise/projects");
         const projects = Array.isArray(projData.projects) ? projData.projects : [];
         const project = projects.find((p) => Number(p.project_id) === Number(projectId));
-        if (!project) {
-            throw new Error("项目不存在或无权限");
-        }
+        if (!project) throw new Error("项目不存在或无权限");
         renderProjectInfo(project);
 
         const roleData = await apiFetch(`/api/enterprise/projects/${projectId}/roles`);
         const roles = Array.isArray(roleData.roles) ? roleData.roles : [];
         renderRoles(roles);
+    }
+
+    function bindEvents() {
+        document.getElementById("btn-ai-suggest").addEventListener("click", openAiSuggestPreview);
+        document.getElementById("btn-ai-close-top").addEventListener("click", closeAiModal);
+        document.getElementById("btn-ai-preview-only").addEventListener("click", closeAiModal);
+        document.getElementById("btn-ai-apply").addEventListener("click", () => {
+            alert("采用所选将于下一版本上线");
+        });
+
+        const modal = document.getElementById("ai-suggest-modal");
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) closeAiModal();
+        });
     }
 
     async function initPage() {
@@ -195,16 +444,16 @@
             return;
         }
 
-        const projectId = getProjectIdFromLocation();
-        if (!projectId) {
-            showMsg("project-msg", false, "缺少 projectId 参数");
+        currentProjectId = getProjectIdFromLocation();
+        if (!currentProjectId) {
+            showMsg("project-msg", false, "缺少 project_id 参数");
             document.getElementById("project-info").innerHTML = '<div class="empty">无法加载项目详情</div>';
             document.getElementById("roles-list").innerHTML = '<div class="empty">无法加载角色列表</div>';
             return;
         }
 
         try {
-            await loadProjectAndRoles(projectId);
+            await loadProjectAndRoles(currentProjectId);
         } catch (err) {
             showMsg("project-msg", false, err.message);
             showMsg("roles-msg", false, err.message);
@@ -214,6 +463,7 @@
     }
 
     window.logout = logout;
+    bindEvents();
     initPage();
 </script>
 </body>

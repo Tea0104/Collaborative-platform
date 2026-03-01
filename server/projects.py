@@ -1,3 +1,7 @@
+import logging
+import re
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 
 try:
@@ -298,3 +302,177 @@ def set_feedback_status(feedback_id: int):
     if res["code"] != 200:
         return jsonify({"code": res["code"], "msg": res["msg"]}), res["code"]
     return jsonify({"code": 200, "msg": "updated"})
+
+
+ACTION_VERBS = (
+    "实现",
+    "搭建",
+    "联调",
+    "测试",
+    "上线",
+    "优化",
+    "设计",
+    "开发",
+    "部署",
+    "implement",
+    "build",
+    "integrate",
+    "test",
+    "deploy",
+)
+
+
+def _normalize_role_name(name: str) -> str:
+    return re.sub(r"\s+", "", str(name or "")).strip()
+
+
+def _coerce_limit_num(value) -> int:
+    try:
+        n = int(value)
+    except Exception:
+        n = 1
+    return max(1, min(3, n))
+
+
+def _parse_datetime(value: str):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00").replace(" ", "T"))
+    except Exception:
+        return None
+
+
+def _sanitize_task_desc(task_desc: str, role_name: str) -> str:
+    text = str(task_desc or "").strip()
+    hit_count = sum(1 for verb in ACTION_VERBS if verb.lower() in text.lower())
+    if len(text) < 12 or hit_count < 2:
+        return f"负责{role_name}相关模块的实现与联调，完成测试并支持上线交付。"
+    return text
+
+
+def _sanitize_task_deadline(task_deadline: str, project_deadline: str) -> str:
+    project_dt = _parse_datetime(project_deadline)
+    role_dt = _parse_datetime(task_deadline)
+    if project_dt is None:
+        return str(task_deadline or "").strip()
+    if role_dt is None or role_dt > project_dt:
+        return str(project_deadline or "").strip()
+    return str(task_deadline or "").strip()
+
+
+def _generate_stub_roles(description: str, project_deadline: str = "") -> list[dict]:
+    desc = (description or "").strip().lower()
+    roles: list[dict] = []
+
+    def add_role(role_name: str, task_desc: str, skill_require: str, limit_num: int):
+        roles.append(
+            {
+                "role_name": role_name,
+                "task_desc": task_desc,
+                "skill_require": skill_require,
+                "limit_num": limit_num,
+                "task_deadline": project_deadline or "",
+            }
+        )
+
+    if any(k in desc for k in ("前端", "网页", "小程序", "frontend", "web")):
+        add_role(
+            "前端开发",
+            "负责页面实现与接口联调，完成兼容性测试并推动上线。",
+            "HTML/CSS/JavaScript, API联调",
+            2,
+        )
+    if any(k in desc for k in ("接口", "数据库", "后端", "backend", "api", "db")):
+        add_role(
+            "后端开发",
+            "负责接口实现与数据库搭建，联调测试后支持上线发布。",
+            "Python/Flask, SQL, RESTful API",
+            1,
+        )
+    if any(k in desc for k in ("推广", "运营", "用户", "增长", "operation", "community")):
+        add_role(
+            "运营支持",
+            "负责用户触达与运营执行，跟踪数据并测试转化策略。",
+            "运营策划, 用户沟通, 数据分析",
+            1,
+        )
+
+    # Keep a minimum default role set for demonstration.
+    add_role("产品经理", "负责需求梳理与方案设计，组织联调测试并推进上线。", "需求分析, 原型设计, 项目协作", 1)
+    add_role("前端开发", "负责页面实现与接口联调，完成兼容性测试并推动上线。", "HTML/CSS/JavaScript, API联调", 2)
+    add_role("后端开发", "负责接口实现与数据库搭建，联调测试后支持上线发布。", "Python/Flask, SQL, RESTful API", 1)
+    return roles
+
+
+def _clean_roles_for_persist(raw_roles: list[dict], project_deadline: str, existing_names: set[str]) -> list[dict]:
+    taken = {_normalize_role_name(name).lower() for name in existing_names if name}
+    cleaned: list[dict] = []
+
+    for item in raw_roles or []:
+        base_name = _normalize_role_name(item.get("role_name") or "角色")
+        if not base_name:
+            base_name = "角色"
+
+        candidate = base_name
+        seq = 2
+        while _normalize_role_name(candidate).lower() in taken:
+            candidate = f"{base_name}_{seq}"
+            seq += 1
+        taken.add(_normalize_role_name(candidate).lower())
+
+        cleaned.append(
+            {
+                "role_name": candidate,
+                "task_desc": _sanitize_task_desc(item.get("task_desc"), candidate),
+                "skill_require": str(item.get("skill_require") or "通用协作与岗位基础技能").strip(),
+                "limit_num": _coerce_limit_num(item.get("limit_num", 1)),
+                "task_deadline": _sanitize_task_deadline(item.get("task_deadline", ""), project_deadline),
+            }
+        )
+    return cleaned
+
+
+def _self_check_ai_suggest_cleaning():
+    """Unit-level self-check example: run manually in Flask shell."""
+    sample = [
+        {"role_name": " 前端 开发 ", "task_desc": "做页面", "limit_num": 9, "task_deadline": "2099-01-01"},
+        {"role_name": "前端开发", "task_desc": "实现并测试接口页面", "limit_num": 0, "task_deadline": ""},
+    ]
+    cleaned = _clean_roles_for_persist(sample, "2026-12-31", {"产品经理"})
+    logging.info("ai-suggest self-check input=%s", sample)
+    logging.info("ai-suggest self-check output=%s", cleaned)
+    return cleaned
+
+
+@projects_bp.route("/api/projects/<int:project_id>/roles/ai-suggest", methods=["POST"])
+def ai_suggest_project_roles(project_id: int):
+    proj = get_project(project_id)
+    if proj["code"] != 200:
+        return jsonify({"code": 404, "msg": "project not found", "data": None}), 404
+
+    project = proj["data"] or {}
+    payload = request.get_json(silent=True) or {}
+
+    project_name = (payload.get("project_name") or project.get("project_name") or "").strip()
+    description = (payload.get("description") or project.get("description") or "").strip()
+    deadline = (payload.get("deadline") or project.get("deadline") or "").strip()
+
+    raw_roles = _generate_stub_roles(description=description, project_deadline=deadline)
+    existing_names = {_normalize_role_name(row.get("role_name", "")) for row in list_roles_by_project(project_id)}
+    roles = _clean_roles_for_persist(raw_roles, deadline, existing_names)
+
+    logging.info(
+        "ai-suggest project_id=%s project=%s raw_count=%s cleaned_count=%s",
+        project_id,
+        project_name or "",
+        len(raw_roles),
+        len(roles),
+    )
+
+    assumptions = [
+        f"当前建议基于项目《{project_name or '未命名项目'}》描述自动生成。",
+        "当前结果为规则 stub，建议人工确认后再保存为正式角色。",
+    ]
+    return jsonify({"code": 200, "msg": "success", "data": {"roles": roles, "assumptions": assumptions}})
