@@ -1,4 +1,6 @@
-from flask import Flask
+import os
+
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 try:
@@ -18,6 +20,7 @@ except ImportError:
 def create_app() -> Flask:
     app = Flask(__name__)
     app.json.ensure_ascii = False
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 
     # CORS（保持你原来的行为：允许任意来源）
     CORS(app)
@@ -29,11 +32,28 @@ def create_app() -> Flask:
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
 
-    # 处理 OPTIONS 预检
-    @app.route("/", defaults={"path": ""}, methods=["OPTIONS"])
-    @app.route("/<path:path>", methods=["OPTIONS"])
-    def handle_options(path):  # noqa: ARG001
-        return "", 200
+    # 处理 OPTIONS 预检（不覆盖普通 GET 路由，避免根路径出现 405）
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            return "", 200
+        return None
+
+    @app.get("/")
+    def index_page():
+        return send_from_directory(frontend_dir, "index.html")
+
+    @app.get("/health")
+    def health_check():
+        return jsonify({"success": True, "message": "backend is running"})
+
+    @app.get("/favicon.ico")
+    def favicon():
+        return "", 204
+
+    @app.get("/<path:filename>")
+    def frontend_file(filename: str):
+        return send_from_directory(frontend_dir, filename)
 
     # DB init/migrate + demo data
     init_database()

@@ -114,7 +114,13 @@
 </div>
 
 <script>
-    const API_BASE = (localStorage.getItem("api_base") || "").trim();
+    const API_BASE = (() => {
+        const configured = (localStorage.getItem("api_base") || "").trim();
+        if (configured) return configured;
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+        return "";
+    })();
 
     function showMessage(text, type) {
         const msgDiv = document.getElementById("message");
