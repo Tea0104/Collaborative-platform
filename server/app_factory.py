@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 try:
@@ -29,11 +29,20 @@ def create_app() -> Flask:
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
 
-    # 处理 OPTIONS 预检
-    @app.route("/", defaults={"path": ""}, methods=["OPTIONS"])
-    @app.route("/<path:path>", methods=["OPTIONS"])
-    def handle_options(path):  # noqa: ARG001
-        return "", 200
+    # 处理 OPTIONS 预检（不覆盖普通 GET 路由，避免根路径出现 405）
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            return "", 200
+        return None
+
+    @app.get("/")
+    def health_check():
+        return jsonify({"success": True, "message": "backend is running"})
+
+    @app.get("/favicon.ico")
+    def favicon():
+        return "", 204
 
     # DB init/migrate + demo data
     init_database()

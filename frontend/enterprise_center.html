@@ -161,7 +161,13 @@
 </main>
 
 <script>
-    const API_BASE = (localStorage.getItem("api_base") || "").trim();
+    const API_BASE = (() => {
+        const configured = (localStorage.getItem("api_base") || "").trim();
+        if (configured) return configured;
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+        return "";
+    })();
     const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
     const userType = localStorage.getItem("user_type") || "";
 
