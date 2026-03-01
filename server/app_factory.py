@@ -50,6 +50,26 @@ def create_app() -> Flask:
     def favicon():
         return "", 204
 
+    @app.get("/enterprisecenter")
+    def enterprise_center_page():
+        return send_from_directory(frontend_dir, "enterprise_center.html")
+
+    @app.get("/enterprisecenter/publish")
+    def enterprise_publish_page():
+        return send_from_directory(frontend_dir, "enterprise_publish.html")
+
+    @app.get("/enterprisecenter/roles")
+    def enterprise_roles_page():
+        return send_from_directory(frontend_dir, "enterprise_roles.html")
+
+    @app.get("/enterprisecenter/review")
+    def enterprise_review_page():
+        return send_from_directory(frontend_dir, "enterprise_review.html")
+
+    @app.get("/enterprisecenter/projects/<int:project_id>")
+    def enterprise_project_detail_page(project_id: int):  # noqa: ARG001
+        return send_from_directory(frontend_dir, "enterprise_project_detail.html")
+
     @app.get("/<path:filename>")
     def frontend_file(filename: str):
         return send_from_directory(frontend_dir, filename)

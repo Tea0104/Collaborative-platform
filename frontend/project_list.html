@@ -494,7 +494,7 @@
     function updateNavActionLink() {
         const link = document.getElementById("nav-action-link");
         if (isEnterpriseUser()) {
-            link.href = "enterprise_center.html";
+            link.href = "/enterprisecenter";
             link.innerHTML = `<i class="fas fa-building"></i> 企业中心`;
             return;
         }
