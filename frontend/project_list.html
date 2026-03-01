@@ -446,7 +446,13 @@
 </footer>
 
 <script>
-    const API_BASE = (localStorage.getItem("api_base") || "").trim();
+    const API_BASE = (() => {
+        const configured = (localStorage.getItem("api_base") || "").trim();
+        if (configured) return configured;
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") return "http://127.0.0.1:5000";
+        return "";
+    })();
     const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
 
     function normalizeText(v) {
@@ -488,7 +494,7 @@
     function updateNavActionLink() {
         const link = document.getElementById("nav-action-link");
         if (isEnterpriseUser()) {
-            link.href = "enterprise_center.html";
+            link.href = "/enterprisecenter";
             link.innerHTML = `<i class="fas fa-building"></i> 企业中心`;
             return;
         }

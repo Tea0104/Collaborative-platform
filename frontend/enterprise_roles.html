@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>企业中心 - 多角色共创平台</title>
+    <title>添加角色 - 企业中心</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
@@ -17,25 +17,15 @@
         .logout-btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.35); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
         .page-title { margin: 24px 0 8px; font-size: 28px; color: #1f2937; }
         .page-desc { color: #6b7280; margin-bottom: 18px; }
-        .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-bottom: 24px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.06); margin-bottom: 24px; }
         .card h2 { font-size: 20px; color: #2563eb; margin-bottom: 14px; }
-        .list { margin-top: 10px; display: grid; gap: 10px; }
-        .item { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-        .item-main { min-width: 0; }
-        .item-title { font-weight: 600; color: #111827; }
-        .item-sub { color: #6b7280; font-size: 13px; }
-        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn { border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+        .field { margin-bottom: 10px; }
+        .field label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 6px; }
+        .field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+        .field textarea { min-height: 80px; resize: vertical; }
+        .btn { border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: #2563eb; color: #fff; }
         .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #eef2ff; color: #1d4ed8; }
-        .btn-secondary:hover { background: #dbeafe; }
-        .btn-sm { padding: 6px 10px; font-size: 12px; }
-        .entry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-        .entry-link { border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; border-radius: 10px; padding: 14px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .entry-link:hover { background: #dbeafe; }
-        .empty { color: #6b7280; font-size: 14px; }
         .msg { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
         .msg.ok { background: #dcfce7; color: #166534; display: block; }
         .msg.err { background: #fee2e2; color: #991b1b; display: block; }
@@ -48,29 +38,48 @@
             <h1><i class="fas fa-building"></i> 企业中心</h1>
         </div>
         <div class="header-actions">
-            <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <a class="back-link" href="/enterprisecenter"><i class="fas fa-arrow-left"></i> 返回企业中心首页</a>
             <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
 </header>
 
 <main class="container">
-    <h1 class="page-title">企业中心首页</h1>
-    <p class="page-desc">请选择入口，或直接管理你已发布的项目。</p>
-
-    <section class="card" style="margin-bottom: 24px;">
-        <h2><i class="fas fa-compass"></i> 导航入口</h2>
-        <div class="entry-grid">
-            <a class="entry-link" href="/enterprisecenter/publish"><i class="fas fa-plus-circle"></i> 项目发布</a>
-            <a class="entry-link" href="/enterprisecenter/roles"><i class="fas fa-user-tag"></i> 添加角色</a>
-            <a class="entry-link" href="/enterprisecenter/review"><i class="fas fa-clipboard-check"></i> 申请批阅</a>
-        </div>
-    </section>
+    <h1 class="page-title">添加角色</h1>
+    <p class="page-desc">给已有项目添加职责岗位。</p>
 
     <section class="card">
-        <h2><i class="fas fa-list"></i> 我发布的项目</h2>
-        <div id="projects-list" class="list"></div>
-        <div id="projects-msg" class="msg"></div>
+        <h2><i class="fas fa-user-tag"></i> 添加角色</h2>
+        <div class="field">
+            <label>选择项目</label>
+            <select id="role-project-id"></select>
+        </div>
+        <div class="field">
+            <label>角色名称</label>
+            <input id="role-name" placeholder="例如：后端开发">
+        </div>
+        <div class="field">
+            <label>任务描述</label>
+            <textarea id="role-task-desc" placeholder="请输入该角色负责的任务"></textarea>
+        </div>
+        <div class="field">
+            <label>技能要求（可选）</label>
+            <input id="role-skills" placeholder="例如：Python,Flask,SQLite">
+        </div>
+        <div class="field">
+            <label>人数上限</label>
+            <input id="role-limit" type="number" min="1" value="1">
+        </div>
+        <div class="field">
+            <label>角色状态</label>
+            <select id="role-status">
+                <option value="招募中">招募中</option>
+                <option value="进行中">进行中</option>
+                <option value="已完成">已完成</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="createRole()"><i class="fas fa-check"></i> 创建角色</button>
+        <div id="create-role-msg" class="msg"></div>
     </section>
 </main>
 
@@ -109,9 +118,7 @@
         if (token) headers.Authorization = `Bearer ${token}`;
         const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
         const data = await response.json();
-        if (!response.ok || data.success === false) {
-            throw new Error(data.message || "请求失败");
-        }
+        if (!response.ok || data.success === false) throw new Error(data.message || "请求失败");
         return data;
     }
 
@@ -130,39 +137,47 @@
         window.location.href = "login.html";
     }
 
-    function formatDate(value) {
-        if (!value) return "-";
-        const d = new Date(String(value).replace(" ", "T"));
-        if (Number.isNaN(d.getTime())) return String(value);
-        return d.toLocaleString("zh-CN", { hour12: false });
-    }
-
-    function renderProjectList(projects) {
-        const list = document.getElementById("projects-list");
+    function renderProjectSelect(projects) {
+        const select = document.getElementById("role-project-id");
         if (!projects.length) {
-            list.innerHTML = '<div class="empty">暂无已发布项目</div>';
+            select.innerHTML = '<option value="">暂无项目</option>';
             return;
         }
-        list.innerHTML = projects.map((project) => {
-            const projectId = Number(project.project_id) || 0;
-            return `
-                <div class="item">
-                    <div class="item-main">
-                        <div class="item-title">${escapeHtml(project.project_name || `项目${projectId}`)}</div>
-                        <div class="item-sub">状态：${escapeHtml(project.project_status || "-")} | 发布时间：${escapeHtml(formatDate(project.publish_time))}</div>
-                        <div class="item-sub">截止时间：${escapeHtml(formatDate(project.deadline))} | 公司：${escapeHtml(project.company || "-")}</div>
-                    </div>
-                    <div class="item-actions">
-                        <a class="btn btn-sm btn-secondary" href="/enterprisecenter/projects/${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
-                    </div>
-                </div>
-            `;
-        }).join("");
+        select.innerHTML = projects.map((p) => `<option value="${p.project_id}">${escapeHtml(p.project_name || `项目${p.project_id}`)}</option>`).join("");
     }
 
     async function loadEnterpriseProjects() {
         const data = await apiFetch("/api/enterprise/projects");
         return Array.isArray(data.projects) ? data.projects : [];
+    }
+
+    async function createRole() {
+        const projectId = document.getElementById("role-project-id").value;
+        const payload = {
+            role_name: document.getElementById("role-name").value.trim(),
+            task_desc: document.getElementById("role-task-desc").value.trim(),
+            skill_require: document.getElementById("role-skills").value.trim(),
+            limit_num: Number(document.getElementById("role-limit").value || 1),
+            role_status: document.getElementById("role-status").value.trim()
+        };
+        if (!projectId) {
+            showMsg("create-role-msg", false, "请先选择项目");
+            return;
+        }
+        if (!payload.role_name || !payload.task_desc) {
+            showMsg("create-role-msg", false, "角色名称和任务描述不能为空");
+            return;
+        }
+        try {
+            const data = await apiFetch(`/api/enterprise/projects/${projectId}/roles`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            showMsg("create-role-msg", true, `角色创建成功，角色ID：${data.role_id}`);
+        } catch (err) {
+            showMsg("create-role-msg", false, err.message);
+        }
     }
 
     async function initPage() {
@@ -176,16 +191,15 @@
             window.location.href = "project_list.html";
             return;
         }
-
         try {
             const projects = await loadEnterpriseProjects();
-            renderProjectList(projects);
+            renderProjectSelect(projects);
         } catch (err) {
-            document.getElementById("projects-list").innerHTML = '<div class="empty">加载失败</div>';
-            showMsg("projects-msg", false, err.message);
+            showMsg("create-role-msg", false, err.message);
         }
     }
 
+    window.createRole = createRole;
     window.logout = logout;
     initPage();
 </script>
