@@ -108,6 +108,24 @@ def init_database() -> None:
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS role_feedback (
+            feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            role_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            evidence_url TEXT,
+            status TEXT NOT NULL DEFAULT 'submitted',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES project(project_id) ON DELETE CASCADE,
+            FOREIGN KEY (role_id) REFERENCES role(role_id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+        )
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS auth_tokens (
             token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
@@ -905,6 +923,123 @@ def review_application(application_id: int, enterprise_id: int, decision: str) -
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"录取失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def add_role_feedback(role_id: int, user_id: int, content: str, evidence_url: str = "") -> Dict:
+    content = (content or "").strip()
+    evidence_url = (evidence_url or "").strip()
+    if not content:
+        return {"code": 400, "msg": "content 不能为空", "data": None}
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT role_id, project_id FROM role WHERE role_id = ?", (role_id,))
+        role_row = cur.fetchone()
+        if not role_row:
+            return {"code": 404, "msg": "角色不存在", "data": None}
+
+        project_id = role_row["project_id"]
+        cur.execute(
+            """
+            INSERT INTO role_feedback (project_id, role_id, user_id, content, evidence_url, status)
+            VALUES (?, ?, ?, ?, ?, 'submitted')
+            """,
+            (project_id, role_id, user_id, content, evidence_url),
+        )
+        conn.commit()
+        return {"code": 200, "msg": "successfully submitted", "data": {"feedback_id": cur.lastrowid}}
+    except Exception as e:
+        conn.rollback()
+        return {"code": 500, "msg": f"提交反馈失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_feedbacks_by_project(project_id: int, status: Optional[str] = None) -> List[dict]:
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if status:
+            cur.execute(
+                """
+                SELECT
+                    f.feedback_id,
+                    f.role_id,
+                    r.role_name,
+                    f.user_id,
+                    f.content,
+                    f.evidence_url,
+                    f.status,
+                    f.created_at
+                FROM role_feedback f
+                LEFT JOIN role r ON f.role_id = r.role_id
+                WHERE f.project_id = ? AND f.status = ?
+                ORDER BY f.created_at DESC, f.feedback_id DESC
+                """,
+                (project_id, status),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT
+                    f.feedback_id,
+                    f.role_id,
+                    r.role_name,
+                    f.user_id,
+                    f.content,
+                    f.evidence_url,
+                    f.status,
+                    f.created_at
+                FROM role_feedback f
+                LEFT JOIN role r ON f.role_id = r.role_id
+                WHERE f.project_id = ?
+                ORDER BY f.created_at DESC, f.feedback_id DESC
+                """,
+                (project_id,),
+            )
+        return [dict(r) for r in cur.fetchall()]
+    finally:
+        cur.close()
+        conn.close()
+
+
+def update_feedback_status(feedback_id: int, status: str, operator_user_id: int) -> Dict:
+    status = (status or "").strip()
+    if not status:
+        return {"code": 400, "msg": "status 不能为空", "data": None}
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT f.feedback_id, f.project_id, p.publisher_id
+            FROM role_feedback f
+            JOIN project p ON f.project_id = p.project_id
+            WHERE f.feedback_id = ?
+            """,
+            (feedback_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return {"code": 404, "msg": "反馈不存在", "data": None}
+        if row["publisher_id"] != operator_user_id:
+            return {"code": 403, "msg": "无权限，仅项目发布者可更新反馈状态", "data": None}
+
+        cur.execute(
+            "UPDATE role_feedback SET status = ? WHERE feedback_id = ?",
+            (status, feedback_id),
+        )
+        conn.commit()
+        return {"code": 200, "msg": "updated", "data": {"feedback_id": feedback_id, "status": status}}
+    except Exception as e:
+        conn.rollback()
+        return {"code": 500, "msg": f"更新反馈状态失败：{str(e)}", "data": None}
     finally:
         cur.close()
         conn.close()

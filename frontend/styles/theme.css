@@ -8,10 +8,24 @@
     --cp-warn: #f59e0b;
     --cp-info: #2563eb;
     --cp-muted: #6b7280;
+
+    /* Backward-compatible aliases for newer page styles */
+    --color-bg: var(--cp-bg);
+    --color-text: var(--cp-text);
+    --color-primary: var(--cp-primary);
+    --color-primary-dark: var(--cp-primary-dark);
+    --color-text-muted: var(--cp-muted);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --gradient-page: linear-gradient(145deg, #f5f7fa 0%, #ebf2ff 100%);
 }
 
 body.page {
     background-color: var(--cp-bg);
+    color: var(--cp-text);
+}
+
+body {
+    margin: 0;
     color: var(--cp-text);
 }
 

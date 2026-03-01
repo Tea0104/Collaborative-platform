@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目进度 - 多角色共创平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles/theme.css">
+    <link rel="stylesheet" href="./styles/components.css">
+    <style>
+        body.page {
+            background: var(--gradient-page);
+        }
+        .page-wrap {
+            padding-top: 24px;
+            padding-bottom: 40px;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .title {
+            margin: 0;
+            color: #1f2937;
+            font-size: 30px;
+        }
+        .sub {
+            margin: 6px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-card h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn.is-active {
+            background: var(--cp-primary);
+            color: #fff;
+            border-color: transparent;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        .table td {
+            vertical-align: top;
+            min-width: 110px;
+        }
+        .content-cell {
+            min-width: 260px;
+            white-space: pre-wrap;
+            color: #1f2937;
+        }
+        .empty {
+            text-align: center;
+            color: #6b7280;
+            padding: 24px;
+        }
+        .msg {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        .msg.ok { display: block; background: #dcfce7; color: #166534; }
+        .msg.err { display: block; background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="page">
+<main class="container page-container page-wrap">
+    <div class="topbar">
+        <div>
+            <h1 class="title">项目进度查看</h1>
+            <p class="sub">项目 ID：<strong id="projectIdText">-</strong></p>
+        </div>
+        <div>
+            <a class="btn btn-outline" id="backLink" href="project_detail.html"><i class="fas fa-arrow-left"></i> 返回项目详情</a>
+        </div>
+    </div>
+
+    <div id="pageMsg" class="msg"></div>
+
+    <section class="stats">
+        <article class="card stat-card">
+            <div class="card-body">
+                <h3>总反馈数</h3>
+                <div id="totalValue" class="stat-value">0</div>
+            </div>
+        </article>
+        <article class="card stat-card">
+            <div class="card-body">
+                <h3>已处理</h3>
+                <div id="processedValue" class="stat-value">0</div>
+            </div>
+        </article>
+        <article class="card stat-card">
+            <div class="card-body">
+                <h3>待处理</h3>
+                <div id="submittedValue" class="stat-value">0</div>
+            </div>
+        </article>
+        <article class="card stat-card">
+            <div class="card-body">
+                <h3>处理占比</h3>
+                <div id="ratioValue" class="stat-value">0%</div>
+            </div>
+        </article>
+    </section>
+
+    <section class="card section">
+        <div class="card-header">
+            <div class="toolbar">
+                <div class="filters">
+                    <button class="btn btn-secondary is-active" data-filter="all" type="button">全部</button>
+                    <button class="btn btn-secondary" data-filter="submitted" type="button">仅 submitted</button>
+                    <button class="btn btn-secondary" data-filter="processed" type="button">仅 processed</button>
+                </div>
+                <button class="btn btn-outline" id="refreshBtn" type="button"><i class="fas fa-rotate"></i> 刷新</button>
+            </div>
+        </div>
+        <div class="card-body table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>角色</th>
+                        <th>提交人</th>
+                        <th>成果内容</th>
+                        <th>证据链接</th>
+                        <th>状态</th>
+                        <th>提交时间</th>
+                    </tr>
+                </thead>
+                <tbody id="feedbackTableBody"></tbody>
+            </table>
+            <div id="emptyState" class="empty" style="display:none;">当前筛选下暂无反馈记录</div>
+        </div>
+    </section>
+</main>
+
+<script src="./js/common.js"></script>
+<script>
+    const API_BASE = (window.CP && window.CP.getApiBase)
+        ? window.CP.getApiBase()
+        : ((localStorage.getItem("api_base") || "").trim());
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+
+    let allFeedbacks = [];
+    let currentFilter = "all";
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function showMsg(ok, text) {
+        const el = document.getElementById("pageMsg");
+        el.className = `msg ${ok ? "ok" : "err"}`;
+        el.textContent = text;
+    }
+
+    function getProjectId() {
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get("project_id") || params.get("id");
+        return /^\d+$/.test(String(pid || "")) ? Number(pid) : null;
+    }
+
+    function formatDate(value) {
+        if (!value) return "-";
+        const d = new Date(String(value).replace(" ", "T"));
+        if (Number.isNaN(d.getTime())) return String(value);
+        return d.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    async function apiFetch(path) {
+        const headers = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE}${path}`, { headers });
+        const data = await response.json();
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || data.msg || "请求失败");
+        }
+        return data;
+    }
+
+    function calcStats(rows) {
+        const total = rows.length;
+        const processed = rows.filter((r) => String(r.status || "").toLowerCase() === "processed").length;
+        const submitted = rows.filter((r) => String(r.status || "").toLowerCase() === "submitted").length;
+        const ratio = total ? `${Math.round((processed / total) * 100)}%` : "0%";
+        return { total, processed, submitted, ratio };
+    }
+
+    function updateStats(rows) {
+        const s = calcStats(rows);
+        document.getElementById("totalValue").textContent = String(s.total);
+        document.getElementById("processedValue").textContent = String(s.processed);
+        document.getElementById("submittedValue").textContent = String(s.submitted);
+        document.getElementById("ratioValue").textContent = s.ratio;
+    }
+
+    function statusBadgeClass(status) {
+        const s = String(status || "").toLowerCase();
+        if (s === "processed") return "badge success";
+        if (s === "submitted") return "badge warn";
+        return "badge info";
+    }
+
+    function getFilteredRows() {
+        if (currentFilter === "all") return allFeedbacks;
+        return allFeedbacks.filter((r) => String(r.status || "").toLowerCase() === currentFilter);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("feedbackTableBody");
+        const empty = document.getElementById("emptyState");
+        const rows = getFilteredRows();
+
+        if (!rows.length) {
+            tbody.innerHTML = "";
+            empty.style.display = "block";
+            return;
+        }
+
+        empty.style.display = "none";
+        tbody.innerHTML = rows.map((item) => {
+            const roleText = item.role_name ? escapeHtml(item.role_name) : `role_id: ${escapeHtml(item.role_id)}`;
+            const evidence = (item.evidence_url || "").trim();
+            return `
+                <tr>
+                    <td>${roleText}</td>
+                    <td>${escapeHtml(item.username || item.real_name || item.user_id || "-")}</td>
+                    <td class="content-cell">${escapeHtml(item.content || "")}</td>
+                    <td>${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">查看链接</a>` : "-"}</td>
+                    <td><span class="${statusBadgeClass(item.status)}">${escapeHtml(item.status || "-")}</span></td>
+                    <td>${escapeHtml(formatDate(item.created_at))}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    function bindFilters() {
+        const filterBtns = Array.from(document.querySelectorAll("[data-filter]"));
+        filterBtns.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                currentFilter = btn.getAttribute("data-filter") || "all";
+                filterBtns.forEach((b) => b.classList.remove("is-active"));
+                btn.classList.add("is-active");
+                renderTable();
+            });
+        });
+    }
+
+    async function loadProgress(projectId) {
+        const data = await apiFetch(`/api/projects/${projectId}/feedbacks`);
+        allFeedbacks = Array.isArray(data.feedbacks) ? data.feedbacks : [];
+        updateStats(allFeedbacks);
+        renderTable();
+    }
+
+    async function initPage() {
+        const projectId = getProjectId();
+        if (!projectId) {
+            showMsg(false, "缺少 project_id 参数");
+            return;
+        }
+
+        document.getElementById("projectIdText").textContent = String(projectId);
+        document.getElementById("backLink").href = `project_detail.html?id=${projectId}`;
+
+        bindFilters();
+        document.getElementById("refreshBtn").addEventListener("click", async () => {
+            try {
+                await loadProgress(projectId);
+                showMsg(true, "刷新成功");
+            } catch (err) {
+                showMsg(false, err.message);
+            }
+        });
+
+        try {
+            await loadProgress(projectId);
+        } catch (err) {
+            showMsg(false, err.message);
+        }
+    }
+
+    initPage();
+</script>
+</body>
+</html>

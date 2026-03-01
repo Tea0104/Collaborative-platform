@@ -3,9 +3,11 @@ from flask import Blueprint, jsonify, request
 try:
     from .auth import login_required, role_required
     from .db import (
+        add_role_feedback,
         get_project,
         get_role,
         get_user,
+        list_feedbacks_by_project,
         list_projects_by_publisher,
         list_public_projects,
         list_roles_by_project,
@@ -13,13 +15,16 @@ try:
         project_update,
         role_add,
         role_update,
+        update_feedback_status,
     )
 except ImportError:
     from auth import login_required, role_required
     from db import (
+        add_role_feedback,
         get_project,
         get_role,
         get_user,
+        list_feedbacks_by_project,
         list_projects_by_publisher,
         list_public_projects,
         list_roles_by_project,
@@ -27,6 +32,7 @@ except ImportError:
         project_update,
         role_add,
         role_update,
+        update_feedback_status,
     )
 
 
@@ -253,3 +259,42 @@ def public_project_detail(project_id: int):
     project["publisher_name"] = publisher_name
     roles = list_roles_by_project(project_id)
     return jsonify({"success": True, "project": project, "roles": roles})
+
+
+@projects_bp.route("/api/roles/<int:role_id>/feedbacks", methods=["POST"])
+@login_required
+def submit_role_feedback(role_id: int):
+    data = request.json or {}
+    content = (data.get("content") or "").strip()
+    evidence_url = (data.get("evidence_url") or "").strip()
+    user_id = request.current_user["user_id"]
+
+    if not content:
+        return jsonify({"code": 400, "msg": "content is required"}), 400
+
+    res = add_role_feedback(role_id=role_id, user_id=user_id, content=content, evidence_url=evidence_url)
+    if res["code"] != 200:
+        return jsonify({"code": res["code"], "msg": res["msg"]}), res["code"]
+    return jsonify({"code": 200, "msg": "successfully submitted"})
+
+
+@projects_bp.route("/api/projects/<int:project_id>/feedbacks", methods=["GET"])
+def list_project_feedbacks(project_id: int):
+    status = (request.args.get("status") or "").strip()
+    feedbacks = list_feedbacks_by_project(project_id, status or None)
+    return jsonify({"success": True, "feedbacks": feedbacks})
+
+
+@projects_bp.route("/api/feedbacks/<int:feedback_id>/status", methods=["PUT"])
+@login_required
+def set_feedback_status(feedback_id: int):
+    data = request.json or {}
+    status = (data.get("status") or "").strip()
+    if not status:
+        return jsonify({"code": 400, "msg": "status is required"}), 400
+
+    user_id = request.current_user["user_id"]
+    res = update_feedback_status(feedback_id=feedback_id, status=status, operator_user_id=user_id)
+    if res["code"] != 200:
+        return jsonify({"code": res["code"], "msg": res["msg"]}), res["code"]
+    return jsonify({"code": 200, "msg": "updated"})

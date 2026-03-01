@@ -31,6 +31,7 @@
         .btn { border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .btn-cancel { background: #ef4444; color: #fff; }
         .btn-cancel:disabled { background: #d1d5db; cursor: not-allowed; }
+        .btn-feedback { background: #2563eb; color: #fff; text-decoration: none; }
         .empty { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 30px; text-align: center; color: #6b7280; }
         .msg { margin-bottom: 12px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
         .msg.ok { display: block; background: #dcfce7; color: #166534; }
@@ -147,6 +148,7 @@
         }
         list.innerHTML = apps.map((app) => {
             const pending = app.status === "pending";
+            const accepted = app.status === "accepted";
             return `
                 <div class="item">
                     <div class="item-main">
@@ -160,6 +162,7 @@
                         <button class="btn btn-cancel" ${pending ? "" : "disabled"} onclick="cancelApplication(${Number(app.application_id) || 0})">
                             <i class="fas fa-times"></i> 撤回
                         </button>
+                        ${accepted ? `<a class="btn btn-feedback" href="feedback_submit.html?role_id=${Number(app.role_id) || 0}&project_id=${Number(app.project_id) || 0}" style="margin-left:8px;"><i class="fas fa-file-upload"></i> 提交成果</a>` : ""}
                     </div>
                 </div>
             `;

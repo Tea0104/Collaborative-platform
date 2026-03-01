@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成果提交</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles/theme.css">
+    <link rel="stylesheet" href="./styles/components.css">
+    <style>
+        body.page {
+            background: var(--gradient-page);
+            color: var(--color-text);
+        }
+        .submit-page {
+            max-width: 860px;
+            margin: 28px auto 40px;
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+        .hero {
+            margin-bottom: 14px;
+        }
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 30px;
+            color: #1f2937;
+        }
+        .hero p {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 14px;
+        }
+        .meta {
+            color: var(--color-text-muted);
+            font-size: 14px;
+        }
+        .toast {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 9999;
+            display: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: var(--shadow-md);
+        }
+        .toast.ok { display: block; background: #0a8f5c; }
+        .toast.err { display: block; background: #d32f2f; }
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        .style-check {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body class="page">
+<div id="toast" class="toast"></div>
+
+<main class="container page-container submit-page">
+    <div class="topbar">
+        <a class="btn btn-outline" id="backToDetailBtn" href="project_detail.html"><i class="fas fa-arrow-left"></i> 返回项目详情</a>
+        <div class="meta">角色 ID: <strong id="roleIdText">-</strong></div>
+    </div>
+
+    <section class="hero">
+        <h1>成果提交</h1>
+        <p>请填写本次阶段成果与证据链接，提交后企业端可在“成果反馈管理”中处理。</p>
+    </section>
+
+    <section class="card section">
+        <div class="card-header">
+            <h2 style="margin: 0;"><i class="fas fa-file-upload"></i> 提交表单</h2>
+        </div>
+        <div class="card-body">
+            <form id="feedbackForm" class="form">
+                <div class="form-group">
+                    <label class="label" for="content">成果内容（必填）</label>
+                    <textarea id="content" class="textarea" placeholder="请描述你的成果内容、完成情况与关键结论" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="label" for="evidence_url">证据链接（可选）</label>
+                    <input id="evidence_url" class="input" type="url" placeholder="https://...">
+                </div>
+                <div class="actions">
+                    <button id="submitBtn" type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> 提交成果
+                    </button>
+                </div>
+            </form>
+            <div class="style-check">样式加载校验：若按钮为蓝色、输入框有圆角和边框，说明 theme/components 已生效。</div>
+        </div>
+    </section>
+</main>
+
+<script src="./js/common.js"></script>
+<script>
+    const API_BASE = window.CP ? window.CP.getApiBase() : ((localStorage.getItem("api_base") || "").trim());
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
+
+    function getRoleIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const queryRoleId = params.get("role_id") || params.get("id");
+        if (queryRoleId && /^\d+$/.test(queryRoleId)) return Number(queryRoleId);
+
+        const pathMatch = window.location.pathname.match(/\/roles\/(\d+)(?:\/|$)/);
+        if (pathMatch) return Number(pathMatch[1]);
+        return null;
+    }
+
+    function getProjectIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const queryProjectId = params.get("project_id") || params.get("pid");
+        if (queryProjectId && /^\d+$/.test(queryProjectId)) return Number(queryProjectId);
+        return null;
+    }
+
+    function showToast(ok, text) {
+        const toast = document.getElementById("toast");
+        toast.className = "toast " + (ok ? "ok" : "err");
+        toast.textContent = text;
+        window.clearTimeout(showToast._timer);
+        showToast._timer = window.setTimeout(() => {
+            toast.className = "toast";
+            toast.textContent = "";
+        }, 2200);
+    }
+
+    function ensureLogin() {
+        if (token) return true;
+        alert("请先登录");
+        window.location.href = "login.html";
+        return false;
+    }
+
+    async function submitFeedback(roleId, content, evidenceUrl) {
+        const response = await fetch(`${API_BASE}/api/roles/${roleId}/feedbacks`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                content: content,
+                evidence_url: evidenceUrl || ""
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || (typeof data.code !== "undefined" && data.code !== 200)) {
+            throw new Error(data.msg || data.message || "提交失败");
+        }
+        return data;
+    }
+
+    (function init() {
+        if (!ensureLogin()) return;
+
+        const roleId = getRoleIdFromUrl();
+        const projectId = getProjectIdFromUrl();
+        const roleIdText = document.getElementById("roleIdText");
+        const backToDetailBtn = document.getElementById("backToDetailBtn");
+        const form = document.getElementById("feedbackForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const contentEl = document.getElementById("content");
+        const evidenceEl = document.getElementById("evidence_url");
+
+        if (backToDetailBtn) {
+            if (projectId) {
+                backToDetailBtn.href = `project_detail.html?id=${projectId}`;
+            } else if (document.referrer) {
+                backToDetailBtn.href = document.referrer;
+            } else {
+                backToDetailBtn.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    window.history.back();
+                });
+            }
+        }
+
+        if (!roleId) {
+            roleIdText.textContent = "未识别";
+            submitBtn.disabled = true;
+            showToast(false, "缺少 role_id 参数");
+            return;
+        }
+
+        roleIdText.textContent = String(roleId);
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const content = (contentEl.value || "").trim();
+            const evidenceUrl = (evidenceEl.value || "").trim();
+
+            if (!content) {
+                showToast(false, "请输入成果内容");
+                contentEl.focus();
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+            try {
+                await submitFeedback(roleId, content, evidenceUrl);
+                showToast(true, "提交成功");
+                alert("成果反馈提交成功");
+                contentEl.value = "";
+                evidenceEl.value = "";
+            } catch (error) {
+                showToast(false, error.message || "提交失败");
+                alert(error.message || "提交失败");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交成果';
+            }
+        });
+    })();
+</script>
+</body>
+</html>

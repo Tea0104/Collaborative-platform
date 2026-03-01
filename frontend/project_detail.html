@@ -351,6 +351,9 @@
             <a href="project_list.html" class="back-link">
                 <i class="fas fa-arrow-left"></i> 返回项目列表
             </a>
+            <a href="#" class="back-link" id="project-progress-link">
+                <i class="fas fa-chart-line"></i> 查看项目进度
+            </a>
             <button class="header-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
@@ -634,6 +637,7 @@
             const isFull = Number(role.join_num || 0) >= Number(role.limit_num || 0);
             const noBlockingApplication = !myApp || canReapplyWithStatus(myApp.status);
             const canApply = isStudentUser() && isRecruitingStatus(role.role_status) && !isFull && noBlockingApplication;
+            const canSubmitFeedback = isStudentUser() && myApp && String(myApp.status || "").toLowerCase() === "accepted";
 
             const requirements = String(role.skill_require || "暂无")
                 .split(/[，,\/]/)
@@ -658,6 +662,11 @@
                     <button class="btn ${canApply ? "btn-primary" : "btn-secondary"}" ${canApply ? "" : "disabled"} onclick="applyForRole(${Number(role.role_id) || 0})">
                         <i class="fas fa-paper-plane"></i> ${btnText}
                     </button>
+                    ${canSubmitFeedback
+                        ? `<a class="btn btn-secondary" href="feedback_submit.html?role_id=${Number(role.role_id) || 0}&project_id=${Number(projectId) || 0}" style="margin-top:8px;width:100%;text-decoration:none;">
+                               <i class="fas fa-file-upload"></i> 提交成果
+                           </a>`
+                        : ""}
                 </div>
             `;
         }).join("");
@@ -747,6 +756,11 @@
         if (!projectId) {
             showError("缺少项目 ID 参数");
             return;
+        }
+
+        const progressLink = document.getElementById("project-progress-link");
+        if (progressLink) {
+            progressLink.href = `project_progress.html?project_id=${Number(projectId) || 0}`;
         }
 
         try {
