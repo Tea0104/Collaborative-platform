@@ -232,7 +232,7 @@ def user_add(
     create_time: Optional[str] = None,
 ) -> Dict:
     if user_type not in USER_TYPES:
-        return {"code": 400, "msg": "鐢ㄦ埛绫诲瀷浠呮敮鎸侊細瀛︾敓/浼佷笟", "data": None}
+        return {"code": 400, "msg": "用户类型仅支持：学生/企业", "data": None}
     create_time = create_time or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = get_db_connection()
     cur = conn.cursor()
@@ -246,10 +246,10 @@ def user_add(
             (username, password_hash, user_type, real_name, school_company, skill_tags, contact, status, create_time),
         )
         conn.commit()
-        return {"code": 200, "msg": "鐢ㄦ埛鏂板鎴愬姛", "data": {"user_id": cur.lastrowid, "username": username}}
+        return {"code": 200, "msg": "用户新增成功", "data": {"user_id": cur.lastrowid, "username": username}}
     except sqlite3.IntegrityError:
         conn.rollback()
-        return {"code": 409, "msg": "鐢ㄦ埛鍚嶅凡瀛樺湪", "data": None}
+        return {"code": 409, "msg": "用户名已存在", "data": None}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"用户新增失败：{str(e)}", "data": None}
@@ -264,10 +264,10 @@ def user_del(user_id: int) -> Dict:
     try:
         cur.execute("SELECT user_id FROM user WHERE user_id = ?", (user_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "鐢ㄦ埛ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "用户ID不存在", "data": None}
         cur.execute("DELETE FROM user WHERE user_id = ?", (user_id,))
         conn.commit()
-        return {"code": 200, "msg": "鐢ㄦ埛鍒犻櫎鎴愬姛", "data": {"user_id": user_id}}
+        return {"code": 200, "msg": "用户删除成功", "data": {"user_id": user_id}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"用户删除失败：{str(e)}", "data": None}
@@ -290,25 +290,25 @@ def user_update(user_id: int, **kwargs) -> Dict:
     ]
     for k in kwargs:
         if k not in allow_fields:
-            return {"code": 400, "msg": f"涓嶆敮鎸佷慨鏀瑰瓧娈碉細{k}", "data": None}
+            return {"code": 400, "msg": f"不支持修改字段：{k}", "data": None}
     if "user_type" in kwargs and kwargs["user_type"] not in USER_TYPES:
-        return {"code": 400, "msg": "鐢ㄦ埛绫诲瀷浠呮敮鎸侊細瀛︾敓/浼佷笟", "data": None}
+        return {"code": 400, "msg": "用户类型仅支持：学生/企业", "data": None}
     if not kwargs:
-        return {"code": 400, "msg": "鏃犱慨鏀瑰瓧娈典紶鍏?", "data": None}
+        return {"code": 400, "msg": "无修改字段传入", "data": None}
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT user_id FROM user WHERE user_id = ?", (user_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "鐢ㄦ埛ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "用户ID不存在", "data": None}
         update_sql = f"UPDATE user SET {', '.join([f'{k}=?' for k in kwargs])} WHERE user_id=?"
         cur.execute(update_sql, list(kwargs.values()) + [user_id])
         conn.commit()
-        return {"code": 200, "msg": "鐢ㄦ埛淇敼鎴愬姛", "data": {"user_id": user_id, "update_fields": list(kwargs.keys())}}
+        return {"code": 200, "msg": "用户修改成功", "data": {"user_id": user_id, "update_fields": list(kwargs.keys())}}
     except sqlite3.IntegrityError:
         conn.rollback()
-        return {"code": 409, "msg": "鐢ㄦ埛鍚嶅凡瀛樺湪锛堜慨鏀圭敤鎴峰悕鍐茬獊锛?", "data": None}
+        return {"code": 409, "msg": "用户名已存在（修改用户名冲突）", "data": None}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"用户修改失败：{str(e)}", "data": None}
@@ -324,8 +324,8 @@ def get_user(user_id: int) -> Dict:
         cur.execute("SELECT * FROM user WHERE user_id = ?", (user_id,))
         user_data = cur.fetchone()
         if not user_data:
-            return {"code": 404, "msg": "鐢ㄦ埛ID涓嶅瓨鍦?", "data": None}
-        return {"code": 200, "msg": "鐢ㄦ埛璇︽儏鏌ヨ鎴愬姛", "data": dict(user_data)}
+            return {"code": 404, "msg": "用户ID不存在", "data": None}
+        return {"code": 200, "msg": "用户详情查询成功", "data": dict(user_data)}
     except Exception as e:
         return {"code": 500, "msg": f"用户查询失败：{str(e)}", "data": None}
     finally:
@@ -356,16 +356,16 @@ def project_add(
     participant_count: str = "",
 ) -> Dict:
     if project_status not in PROJECT_STATUS:
-        return {"code": 400, "msg": "椤圭洰鐘舵€佷笉鍚堟硶", "data": None}
+        return {"code": 400, "msg": "项目状态不合法", "data": None}
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT user_type FROM user WHERE user_id = ?", (publisher_id,))
         pub = cur.fetchone()
         if not pub:
-            return {"code": 404, "msg": "鍙戝竷鑰匢D涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "发布者ID不存在", "data": None}
         if pub["user_type"] != "企业":
-            return {"code": 403, "msg": "浠呬紒涓氬彲鍙戝竷椤圭洰", "data": None}
+            return {"code": 403, "msg": "仅企业可发布项目", "data": None}
         cur.execute(
             """
             INSERT INTO project (project_name, description, publisher_id, project_status,
@@ -387,7 +387,7 @@ def project_add(
             ),
         )
         conn.commit()
-        return {"code": 200, "msg": "椤圭洰鏂板鎴愬姛", "data": {"project_id": cur.lastrowid, "project_name": project_name}}
+        return {"code": 200, "msg": "项目新增成功", "data": {"project_id": cur.lastrowid, "project_name": project_name}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"项目新增失败：{str(e)}", "data": None}
@@ -411,9 +411,9 @@ def project_update(project_id: int, **kwargs) -> Dict:
     ]
     for k in kwargs:
         if k not in allow_fields:
-            return {"code": 400, "msg": f"涓嶆敮鎸佷慨鏀瑰瓧娈碉細{k}", "data": None}
+            return {"code": 400, "msg": f"不支持修改字段：{k}", "data": None}
     if "project_status" in kwargs and kwargs["project_status"] not in PROJECT_STATUS:
-        return {"code": 400, "msg": "椤圭洰鐘舵€佷笉鍚堟硶", "data": None}
+        return {"code": 400, "msg": "项目状态不合法", "data": None}
     if "publisher_id" in kwargs:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -421,21 +421,21 @@ def project_update(project_id: int, **kwargs) -> Dict:
         pub = cur.fetchone()
         cur.close()
         conn.close()
-        if not pub or pub["user_type"] != "浼佷笟":
-            return {"code": 403, "msg": "鏂扮殑鍙戝竷鑰呭繀椤绘槸浼佷笟涓斿瓨鍦?", "data": None}
+        if not pub or pub["user_type"] != "企业":
+            return {"code": 403, "msg": "新的发布者必须是企业且存在", "data": None}
     if not kwargs:
-        return {"code": 400, "msg": "鏃犱慨鏀瑰瓧娈典紶鍏?", "data": None}
+        return {"code": 400, "msg": "无修改字段传入", "data": None}
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT project_id FROM project WHERE project_id = ?", (project_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "椤圭洰ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "项目ID不存在", "data": None}
         update_sql = f"UPDATE project SET {', '.join([f'{k}=?' for k in kwargs])} WHERE project_id=?"
         cur.execute(update_sql, list(kwargs.values()) + [project_id])
         conn.commit()
-        return {"code": 200, "msg": "椤圭洰淇敼鎴愬姛", "data": {"project_id": project_id, "update_fields": list(kwargs.keys())}}
+        return {"code": 200, "msg": "项目修改成功", "data": {"project_id": project_id, "update_fields": list(kwargs.keys())}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"项目修改失败：{str(e)}", "data": None}
@@ -450,10 +450,10 @@ def project_del(project_id: int) -> Dict:
     try:
         cur.execute("SELECT project_id FROM project WHERE project_id = ?", (project_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "椤圭洰ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "项目ID不存在", "data": None}
         cur.execute("DELETE FROM project WHERE project_id = ?", (project_id,))
         conn.commit()
-        return {"code": 200, "msg": "椤圭洰鍒犻櫎鎴愬姛", "data": {"project_id": project_id}}
+        return {"code": 200, "msg": "项目删除成功", "data": {"project_id": project_id}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"项目删除失败：{str(e)}", "data": None}
@@ -469,8 +469,8 @@ def get_project(project_id: int) -> Dict:
         cur.execute("SELECT * FROM project WHERE project_id = ?", (project_id,))
         project_data = cur.fetchone()
         if not project_data:
-            return {"code": 404, "msg": "椤圭洰ID涓嶅瓨鍦?", "data": None}
-        return {"code": 200, "msg": "椤圭洰璇︽儏鏌ヨ鎴愬姛", "data": dict(project_data)}
+            return {"code": 404, "msg": "项目ID不存在", "data": None}
+        return {"code": 200, "msg": "项目详情查询成功", "data": dict(project_data)}
     except Exception as e:
         return {"code": 500, "msg": f"项目查询失败：{str(e)}", "data": None}
     finally:
@@ -534,15 +534,15 @@ def role_add(
     task_deadline: Optional[str] = None,
 ) -> Dict:
     if role_status not in ROLE_STATUS:
-        return {"code": 400, "msg": "瑙掕壊鐘舵€佷笉鍚堟硶", "data": None}
+        return {"code": 400, "msg": "角色状态不合法", "data": None}
     if join_num > limit_num:
-        return {"code": 400, "msg": "宸叉湁浜烘暟涓嶈兘瓒呰繃浜烘暟闄愬埗", "data": None}
+        return {"code": 400, "msg": "已有人数不能超过人数限制", "data": None}
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT project_id FROM project WHERE project_id = ?", (project_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "椤圭洰ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "项目ID不存在", "data": None}
         cur.execute(
             """
             INSERT INTO role (project_id, role_name, task_desc, skill_require,
@@ -552,7 +552,7 @@ def role_add(
             (project_id, role_name, task_desc, skill_require, limit_num, join_num, role_status, task_deadline),
         )
         conn.commit()
-        return {"code": 200, "msg": "瑙掕壊鏂板鎴愬姛", "data": {"role_id": cur.lastrowid, "role_name": role_name}}
+        return {"code": 200, "msg": "角色新增成功", "data": {"role_id": cur.lastrowid, "role_name": role_name}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"角色新增失败：{str(e)}", "data": None}
@@ -574,12 +574,12 @@ def role_update(role_id: int, **kwargs) -> Dict:
     ]
     for k in kwargs:
         if k not in allow_fields:
-            return {"code": 400, "msg": f"涓嶆敮鎸佷慨鏀瑰瓧娈碉細{k}", "data": None}
+            return {"code": 400, "msg": f"不支持修改字段：{k}", "data": None}
     if "role_status" in kwargs and kwargs["role_status"] not in ROLE_STATUS:
-        return {"code": 400, "msg": "瑙掕壊鐘舵€佷笉鍚堟硶", "data": None}
+        return {"code": 400, "msg": "角色状态不合法", "data": None}
     if "join_num" in kwargs and "limit_num" in kwargs:
         if kwargs["join_num"] > kwargs["limit_num"]:
-            return {"code": 400, "msg": "宸叉湁浜烘暟涓嶈兘瓒呰繃浜烘暟闄愬埗", "data": None}
+            return {"code": 400, "msg": "已有人数不能超过人数限制", "data": None}
     if "project_id" in kwargs:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -587,22 +587,22 @@ def role_update(role_id: int, **kwargs) -> Dict:
         if not cur.fetchone():
             cur.close()
             conn.close()
-            return {"code": 404, "msg": "鏂伴」鐩甀D涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "新项目ID不存在", "data": None}
         cur.close()
         conn.close()
     if not kwargs:
-        return {"code": 400, "msg": "鏃犱慨鏀瑰瓧娈典紶鍏?", "data": None}
+        return {"code": 400, "msg": "无修改字段传入", "data": None}
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT role_id FROM role WHERE role_id = ?", (role_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "瑙掕壊ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "角色ID不存在", "data": None}
         update_sql = f"UPDATE role SET {', '.join([f'{k}=?' for k in kwargs])} WHERE role_id=?"
         cur.execute(update_sql, list(kwargs.values()) + [role_id])
         conn.commit()
-        return {"code": 200, "msg": "瑙掕壊淇敼鎴愬姛", "data": {"role_id": role_id, "update_fields": list(kwargs.keys())}}
+        return {"code": 200, "msg": "角色修改成功", "data": {"role_id": role_id, "update_fields": list(kwargs.keys())}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"角色修改失败：{str(e)}", "data": None}
@@ -617,10 +617,10 @@ def role_del(role_id: int) -> Dict:
     try:
         cur.execute("SELECT role_id FROM role WHERE role_id = ?", (role_id,))
         if not cur.fetchone():
-            return {"code": 404, "msg": "瑙掕壊ID涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "角色ID不存在", "data": None}
         cur.execute("DELETE FROM role WHERE role_id = ?", (role_id,))
         conn.commit()
-        return {"code": 200, "msg": "瑙掕壊鍒犻櫎鎴愬姛", "data": {"role_id": role_id}}
+        return {"code": 200, "msg": "角色删除成功", "data": {"role_id": role_id}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"角色删除失败：{str(e)}", "data": None}
@@ -636,8 +636,8 @@ def get_role(role_id: int) -> Dict:
         cur.execute("SELECT * FROM role WHERE role_id = ?", (role_id,))
         role_data = cur.fetchone()
         if not role_data:
-            return {"code": 404, "msg": "瑙掕壊ID涓嶅瓨鍦?", "data": None}
-        return {"code": 200, "msg": "瑙掕壊璇︽儏鏌ヨ鎴愬姛", "data": dict(role_data)}
+            return {"code": 404, "msg": "角色ID不存在", "data": None}
+        return {"code": 200, "msg": "角色详情查询成功", "data": dict(role_data)}
     except Exception as e:
         return {"code": 500, "msg": f"角色查询失败：{str(e)}", "data": None}
     finally:
@@ -707,13 +707,13 @@ def apply_for_role(role_id: int, student_id: int, motivation: str) -> Dict:
         )
         role = cur.fetchone()
         if not role:
-            return {"code": 404, "msg": "瑙掕壊涓嶅瓨鍦?", "data": None}
+            return {"code": 404, "msg": "角色不存在", "data": None}
         if role["project_status"] in ("草稿", "已终止"):
-            return {"code": 400, "msg": "椤圭洰鏈彂甯冩垨宸茬粓姝紝鏃犳硶鐢宠", "data": None}
+            return {"code": 400, "msg": "项目未发布或已终止，无法申请", "data": None}
         if role["role_status"] != "招募中":
-            return {"code": 400, "msg": "瑙掕壊涓嶅彲鐢宠", "data": None}
+            return {"code": 400, "msg": "角色不可申请", "data": None}
         if role["join_num"] >= role["limit_num"]:
-            return {"code": 400, "msg": "瑙掕壊鍚嶉宸叉弧", "data": None}
+            return {"code": 400, "msg": "角色名额已满", "data": None}
 
         cur.execute(
             "SELECT application_id, status FROM role_application WHERE role_id = ? AND student_id = ?",
@@ -721,7 +721,7 @@ def apply_for_role(role_id: int, student_id: int, motivation: str) -> Dict:
         )
         existing = cur.fetchone()
         if existing and existing["status"] in ("pending", "accepted"):
-            return {"code": 400, "msg": "浣犲凡鎻愪氦杩囪瑙掕壊鐢宠", "data": None}
+            return {"code": 400, "msg": "你已提交过该角色申请", "data": None}
 
         cur.execute(
             """
@@ -732,7 +732,7 @@ def apply_for_role(role_id: int, student_id: int, motivation: str) -> Dict:
             (role["project_id"], student_id),
         )
         if cur.fetchone():
-            return {"code": 400, "msg": "浣犲凡鍔犲叆璇ラ」鐩紝鏃犳硶鍐嶆鐢宠", "data": None}
+            return {"code": 400, "msg": "你已加入该项目，无法再次申请", "data": None}
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if existing:
@@ -755,7 +755,7 @@ def apply_for_role(role_id: int, student_id: int, motivation: str) -> Dict:
             )
             application_id = cur.lastrowid
         conn.commit()
-        return {"code": 200, "msg": "鐢宠鎴愬姛", "data": {"application_id": application_id}}
+        return {"code": 200, "msg": "申请成功", "data": {"application_id": application_id}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"申请失败：{str(e)}", "data": None}
@@ -800,11 +800,11 @@ def cancel_application(application_id: int, student_id: int) -> Dict:
     if cur.rowcount == 0:
         cur.close()
         conn.close()
-        return {"code": 400, "msg": "鎾ゅ洖澶辫触锛氳褰曚笉瀛樺湪鎴栫姸鎬佷笉鍙挙鍥?", "data": None}
+        return {"code": 400, "msg": "撤回失败：记录不存在或状态不可撤回", "data": None}
     conn.commit()
     cur.close()
     conn.close()
-    return {"code": 200, "msg": "宸叉挙鍥?", "data": {"application_id": application_id}}
+    return {"code": 200, "msg": "已撤回", "data": {"application_id": application_id}}
 
 
 def list_role_applications(role_id: int, enterprise_id: int) -> Dict:
@@ -822,7 +822,7 @@ def list_role_applications(role_id: int, enterprise_id: int) -> Dict:
     if not cur.fetchone():
         cur.close()
         conn.close()
-        return {"code": 404, "msg": "瑙掕壊涓嶅瓨鍦ㄦ垨鏃犳潈闄?", "data": None}
+        return {"code": 404, "msg": "角色不存在或无权限", "data": None}
 
     cur.execute(
         """
@@ -838,12 +838,12 @@ def list_role_applications(role_id: int, enterprise_id: int) -> Dict:
     rows = [dict(r) for r in cur.fetchall()]
     cur.close()
     conn.close()
-    return {"code": 200, "msg": "鏌ヨ鎴愬姛", "data": rows}
+    return {"code": 200, "msg": "查询成功", "data": rows}
 
 
 def review_application(application_id: int, enterprise_id: int, decision: str) -> Dict:
     if decision not in ("accepted", "rejected"):
-        return {"code": 400, "msg": "decision 鍙兘鏄?accepted 鎴?rejected", "data": None}
+        return {"code": 400, "msg": "decision 只能是 accepted 或 rejected", "data": None}
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -861,9 +861,9 @@ def review_application(application_id: int, enterprise_id: int, decision: str) -
         )
         app_row = cur.fetchone()
         if not app_row:
-            return {"code": 404, "msg": "鐢宠涓嶅瓨鍦ㄦ垨鏃犳潈闄?", "data": None}
+            return {"code": 404, "msg": "申请不存在或无权限", "data": None}
         if app_row["status"] != "pending":
-            return {"code": 400, "msg": "鍙兘瀹℃牳 pending 鐢宠", "data": None}
+            return {"code": 400, "msg": "只能审核 pending 申请", "data": None}
 
         if decision == "rejected":
             cur.execute(
@@ -871,14 +871,14 @@ def review_application(application_id: int, enterprise_id: int, decision: str) -
                 (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), application_id),
             )
             conn.commit()
-            return {"code": 200, "msg": "宸叉嫆缁?", "data": {"application_id": application_id}}
+            return {"code": 200, "msg": "已拒绝", "data": {"application_id": application_id}}
 
         if app_row["project_status"] in ("草稿", "已终止"):
-            return {"code": 400, "msg": "椤圭洰鏈彂甯冩垨宸茬粓姝紝鏃犳硶褰曞彇", "data": None}
+            return {"code": 400, "msg": "项目未发布或已终止，无法录取", "data": None}
         if app_row["role_status"] != "招募中":
-            return {"code": 400, "msg": "瑙掕壊涓嶅彲褰曞彇", "data": None}
+            return {"code": 400, "msg": "角色不可录取", "data": None}
         if app_row["join_num"] >= app_row["limit_num"]:
-            return {"code": 400, "msg": "瑙掕壊宸叉弧锛屾棤娉曞綍鍙?", "data": None}
+            return {"code": 400, "msg": "角色已满，无法录取", "data": None}
 
         cur.execute(
             """
@@ -889,7 +889,7 @@ def review_application(application_id: int, enterprise_id: int, decision: str) -
             (app_row["project_id"], app_row["student_id"]),
         )
         if cur.fetchone():
-            return {"code": 400, "msg": "璇ュ鐢熷凡鍔犲叆璇ラ」鐩?", "data": None}
+            return {"code": 400, "msg": "该学生已加入该项目", "data": None}
 
         cur.execute(
             "UPDATE role_application SET status = 'accepted', update_time = ? WHERE application_id = ?",
@@ -901,7 +901,7 @@ def review_application(application_id: int, enterprise_id: int, decision: str) -
         if role_counts and role_counts["join_num"] >= role_counts["limit_num"]:
             cur.execute("UPDATE role SET role_status = '已完成' WHERE role_id = ?", (app_row["role_id"],))
         conn.commit()
-        return {"code": 200, "msg": "宸插綍鍙?", "data": {"application_id": application_id}}
+        return {"code": 200, "msg": "已录取", "data": {"application_id": application_id}}
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"录取失败：{str(e)}", "data": None}
