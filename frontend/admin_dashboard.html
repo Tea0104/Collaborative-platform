@@ -152,7 +152,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-light" type="button" onclick="window.location.href='index.html'">
+            <button class="btn btn-light" type="button" onclick="window.location.href='/index.html'">
                 <i class="fas fa-house"></i> 返回首页
             </button>
             <button class="btn btn-light" type="button" onclick="logout()">
@@ -561,16 +561,16 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     async function boot() {
         if (!getToken()) {
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
             return;
         }
         if (getUserType() !== "管理员") {
-            window.location.href = "index.html";
+            window.location.href = "/index.html";
             return;
         }
         clearMessage();

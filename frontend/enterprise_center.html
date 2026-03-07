@@ -50,7 +50,7 @@
             <h1><i class="fas fa-building"></i> 企业中心</h1>
         </div>
         <div class="header-actions">
-            <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <a class="back-link" href="/project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
             <button class="logout-btn btn btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
@@ -153,7 +153,7 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     function renderProjectList(projects) {
@@ -173,8 +173,8 @@
                     </div>
                     <div class="item-actions">
                         <a class="btn btn-sm btn-outline" href="/enterprisecenter/projects/${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
-                        <a class="btn btn-sm btn-primary" href="enterprise_feedback.html?project_id=${projectId}"><i class="fas fa-comments"></i> 成果反馈</a>
-                        <a class="btn btn-sm btn-outline" href="project_progress.html?project_id=${projectId}"><i class="fas fa-chart-line"></i> 项目进度</a>
+                        <a class="btn btn-sm btn-primary" href="/enterprise_feedback.html?project_id=${projectId}"><i class="fas fa-comments"></i> 成果反馈</a>
+                        <a class="btn btn-sm btn-outline" href="/project_progress.html?project_id=${projectId}"><i class="fas fa-chart-line"></i> 项目进度</a>
                     </div>
                 </div>
             `;
@@ -189,12 +189,12 @@
     async function initPage() {
         if (!token) {
             alert("请先登录企业账号");
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
             return;
         }
         if (!asEnterprise()) {
             alert("只有企业账号可以访问企业中心");
-            window.location.href = "project_list.html";
+            window.location.href = "/project_list.html";
             return;
         }
 

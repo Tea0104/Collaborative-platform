@@ -193,7 +193,7 @@
             }
 
             showMessage("注册成功，正在跳转登录页...", "success");
-            setTimeout(() => { window.location.href = "login.html"; }, 1000);
+            setTimeout(() => { window.location.href = "/login.html"; }, 1000);
         } catch (error) {
             showMessage(error.message || "网络错误，无法连接到服务器", "error");
             registerBtn.disabled = false;

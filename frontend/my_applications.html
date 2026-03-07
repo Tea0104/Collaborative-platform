@@ -45,7 +45,7 @@
             <h1><i class="fas fa-briefcase"></i> 我的申请</h1>
         </div>
         <div class="actions">
-            <a class="back-link" href="project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <a class="back-link" href="/project_list.html"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
             <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
@@ -126,7 +126,7 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     async function cancelApplication(applicationId) {
@@ -184,12 +184,12 @@
         const isStudent = ["学生", "student", "Student"].includes(userType);
         if (!token) {
             alert("请先登录");
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
             return false;
         }
         if (!isStudent) {
             alert("只有学生可以查看我的申请");
-            window.location.href = "project_list.html";
+            window.location.href = "/project_list.html";
             return false;
         }
         return true;

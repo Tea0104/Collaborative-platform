@@ -91,7 +91,7 @@
     <div class="container header-container">
         <div class="logo"><h1><i class="fas fa-users-cog"></i> 多角色共创平台</h1></div>
         <div class="header-actions">
-            <a href="project_list.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <a href="/project_list.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
             <a href="#" class="back-link" id="project-progress-link"><i class="fas fa-chart-line"></i> 查看项目进度</a>
             <button class="header-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
@@ -100,7 +100,7 @@
 
 <nav class="breadcrumb">
     <div class="container page-container">
-        <a href="project_list.html">项目列表</a> / <span>项目详情</span>
+        <a href="/project_list.html">项目列表</a> / <span>项目详情</span>
     </div>
 </nav>
 
@@ -218,7 +218,7 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     function escapeHtml(value) {
@@ -468,7 +468,7 @@
     async function applyForRole(roleId) {
         if (!token) {
             alert("请先登录");
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
             return;
         }
 

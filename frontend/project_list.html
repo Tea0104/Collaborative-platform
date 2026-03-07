@@ -323,7 +323,7 @@
 
 <nav>
     <div class="container nav-container">
-        <a href="project_list.html" class="nav-link active"><i class="fas fa-project-diagram"></i> 项目列表</a>
+        <a href="/project_list.html" class="nav-link active"><i class="fas fa-project-diagram"></i> 项目列表</a>
         <a href="#" class="nav-link" id="nav-action-link"><i class="fas fa-briefcase"></i> 我的申请</a>
         <a href="#" class="nav-link"><i class="fas fa-history"></i> 参与记录</a>
         <a href="#" class="nav-link"><i class="fas fa-user-circle"></i> 个人中心</a>
@@ -503,7 +503,7 @@
             link.innerHTML = `<i class="fas fa-building"></i> 企业中心`;
             return;
         }
-        link.href = "my_applications.html";
+            link.href = "/my_applications.html";
         link.innerHTML = `<i class="fas fa-briefcase"></i> 我的申请`;
     }
 
@@ -522,7 +522,7 @@
             logout();
             return;
         }
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     async function logout() {
@@ -542,7 +542,7 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     function applyFilters(projects) {

@@ -246,7 +246,7 @@
         localStorage.removeItem("username");
         localStorage.removeItem("user_type");
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
     }
 
     function renderProjectInfo(project) {
@@ -545,12 +545,12 @@
     async function initPage() {
         if (!token) {
             alert("请先登录企业账号。");
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
             return;
         }
         if (!asEnterprise()) {
             alert("只有企业账号可以访问企业中心。");
-            window.location.href = "project_list.html";
+            window.location.href = "/project_list.html";
             return;
         }
 
