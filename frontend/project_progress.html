@@ -8,90 +8,24 @@
     <link rel="stylesheet" href="./styles/theme.css">
     <link rel="stylesheet" href="./styles/components.css">
     <style>
-        body.page {
-            background: var(--gradient-page);
-        }
-        .page-wrap {
-            padding-top: 24px;
-            padding-bottom: 40px;
-        }
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-        .title {
-            margin: 0;
-            color: #1f2937;
-            font-size: 30px;
-        }
-        .sub {
-            margin: 6px 0 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .stat-card h3 {
-            margin: 0 0 8px;
-            font-size: 14px;
-            color: #64748b;
-            font-weight: 600;
-        }
-        .stat-value {
-            font-size: 30px;
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-        }
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .filters {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .btn.is-active {
-            background: var(--cp-primary);
-            color: #fff;
-            border-color: transparent;
-        }
-        .table-wrap {
-            overflow-x: auto;
-        }
-        .table td {
-            vertical-align: top;
-            min-width: 110px;
-        }
-        .content-cell {
-            min-width: 260px;
-            white-space: pre-wrap;
-            color: #1f2937;
-        }
-        .empty {
-            text-align: center;
-            color: #6b7280;
-            padding: 24px;
-        }
-        .msg {
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-        }
+        body.page { background: var(--gradient-page); }
+        .page-wrap { padding-top: 24px; padding-bottom: 40px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .title { margin: 0; color: #1f2937; font-size: 30px; }
+        .sub { margin: 6px 0 0; color: #6b7280; font-size: 14px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card h3 { margin: 0 0 8px; font-size: 14px; color: #64748b; font-weight: 600; }
+        .stat-value { font-size: 30px; font-weight: 700; color: #111827; line-height: 1.2; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn.is-active { background: var(--cp-primary); color: #fff; border-color: transparent; }
+        .table-wrap { overflow-x: auto; }
+        .table td { vertical-align: top; min-width: 110px; }
+        .content-cell { min-width: 260px; white-space: pre-wrap; color: #1f2937; }
+        .evidence-cell a { color: #2563eb; text-decoration: none; }
+        .evidence-cell a:hover { text-decoration: underline; }
+        .empty { text-align: center; color: #6b7280; padding: 24px; }
+        .msg { margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; display: none; }
         .msg.ok { display: block; background: #dcfce7; color: #166534; }
         .msg.err { display: block; background: #fee2e2; color: #991b1b; }
     </style>
@@ -111,30 +45,10 @@
     <div id="pageMsg" class="msg"></div>
 
     <section class="stats">
-        <article class="card stat-card">
-            <div class="card-body">
-                <h3>总反馈数</h3>
-                <div id="totalValue" class="stat-value">0</div>
-            </div>
-        </article>
-        <article class="card stat-card">
-            <div class="card-body">
-                <h3>已处理</h3>
-                <div id="processedValue" class="stat-value">0</div>
-            </div>
-        </article>
-        <article class="card stat-card">
-            <div class="card-body">
-                <h3>待处理</h3>
-                <div id="submittedValue" class="stat-value">0</div>
-            </div>
-        </article>
-        <article class="card stat-card">
-            <div class="card-body">
-                <h3>处理占比</h3>
-                <div id="ratioValue" class="stat-value">0%</div>
-            </div>
-        </article>
+        <article class="card stat-card"><div class="card-body"><h3>总反馈数</h3><div id="totalValue" class="stat-value">0</div></div></article>
+        <article class="card stat-card"><div class="card-body"><h3>已处理</h3><div id="processedValue" class="stat-value">0</div></div></article>
+        <article class="card stat-card"><div class="card-body"><h3>待处理</h3><div id="submittedValue" class="stat-value">0</div></div></article>
+        <article class="card stat-card"><div class="card-body"><h3>处理占比</h3><div id="ratioValue" class="stat-value">0%</div></div></article>
     </section>
 
     <section class="card section">
@@ -152,10 +66,10 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>角色</th>
+                        <th>岗位</th>
                         <th>提交人</th>
                         <th>成果内容</th>
-                        <th>证据链接</th>
+                        <th>附件 / 链接</th>
                         <th>状态</th>
                         <th>提交时间</th>
                     </tr>
@@ -244,6 +158,13 @@
         return allFeedbacks.filter((r) => String(r.status || "").toLowerCase() === currentFilter);
     }
 
+    function renderEvidenceCell(value) {
+        const evidence = String(value || "").trim();
+        if (!evidence) return "-";
+        const label = evidence.startsWith("/uploads/") ? "下载附件" : "查看外部链接";
+        return `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+
     function renderTable() {
         const tbody = document.getElementById("feedbackTableBody");
         const empty = document.getElementById("emptyState");
@@ -258,13 +179,12 @@
         empty.style.display = "none";
         tbody.innerHTML = rows.map((item) => {
             const roleText = item.role_name ? escapeHtml(item.role_name) : `role_id: ${escapeHtml(item.role_id)}`;
-            const evidence = (item.evidence_url || "").trim();
             return `
                 <tr>
                     <td>${roleText}</td>
                     <td>${escapeHtml(item.username || item.real_name || item.user_id || "-")}</td>
                     <td class="content-cell">${escapeHtml(item.content || "")}</td>
-                    <td>${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">查看链接</a>` : "-"}</td>
+                    <td class="evidence-cell">${renderEvidenceCell(item.evidence_url)}</td>
                     <td><span class="${statusBadgeClass(item.status)}">${escapeHtml(item.status || "-")}</span></td>
                     <td>${escapeHtml(formatDate(item.created_at))}</td>
                 </tr>

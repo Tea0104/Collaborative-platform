@@ -8,38 +8,13 @@
     <link rel="stylesheet" href="./styles/theme.css">
     <link rel="stylesheet" href="./styles/components.css">
     <style>
-        body.page {
-            background: var(--gradient-page);
-            color: var(--color-text);
-        }
-        .submit-page {
-            max-width: 860px;
-            margin: 28px auto 40px;
-        }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 12px;
-        }
-        .hero {
-            margin-bottom: 14px;
-        }
-        .hero h1 {
-            margin: 0 0 6px;
-            font-size: 30px;
-            color: #1f2937;
-        }
-        .hero p {
-            margin: 0;
-            color: var(--color-text-muted);
-            font-size: 14px;
-        }
-        .meta {
-            color: var(--color-text-muted);
-            font-size: 14px;
-        }
+        body.page { background: var(--gradient-page); color: var(--color-text); }
+        .submit-page { max-width: 860px; margin: 28px auto 40px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
+        .hero { margin-bottom: 14px; }
+        .hero h1 { margin: 0 0 6px; font-size: 30px; color: #1f2937; }
+        .hero p { margin: 0; color: var(--color-text-muted); font-size: 14px; }
+        .meta { color: var(--color-text-muted); font-size: 14px; }
         .toast {
             position: fixed;
             right: 20px;
@@ -54,16 +29,12 @@
         }
         .toast.ok { display: block; background: #0a8f5c; }
         .toast.err { display: block; background: #d32f2f; }
-        .actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 8px;
-        }
-        .style-check {
+        .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+        .hint {
             font-size: 12px;
             color: #64748b;
             margin-top: 8px;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -73,12 +44,12 @@
 <main class="container page-container submit-page">
     <div class="topbar">
         <a class="btn btn-outline" id="backToDetailBtn" href="project_detail.html"><i class="fas fa-arrow-left"></i> 返回项目详情</a>
-        <div class="meta">角色 ID: <strong id="roleIdText">-</strong></div>
+        <div class="meta">岗位 ID: <strong id="roleIdText">-</strong></div>
     </div>
 
     <section class="hero">
         <h1>成果提交</h1>
-        <p>请填写本次阶段成果与证据链接，提交后企业端可在“成果反馈管理”中处理。</p>
+        <p>填写本次阶段成果说明，并可附上文件或外部链接，提交后企业端可以查看和处理。</p>
     </section>
 
     <section class="card section">
@@ -92,7 +63,11 @@
                     <textarea id="content" class="textarea" placeholder="请描述你的成果内容、完成情况与关键结论" required></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="label" for="evidence_url">证据链接（可选）</label>
+                    <label class="label" for="evidence_file">成果附件（可选）</label>
+                    <input id="evidence_file" class="input" type="file">
+                </div>
+                <div class="form-group">
+                    <label class="label" for="evidence_url">外部链接（可选）</label>
                     <input id="evidence_url" class="input" type="url" placeholder="https://...">
                 </div>
                 <div class="actions">
@@ -101,7 +76,10 @@
                     </button>
                 </div>
             </form>
-            <div class="style-check">样式加载校验：若按钮为蓝色、输入框有圆角和边框，说明 theme/components 已生效。</div>
+            <div class="hint">
+                附件支持：pdf/doc/docx/ppt/pptx/xls/xlsx/zip/rar/7z/png/jpg/jpeg/gif/txt/md，单文件最大 20MB。<br>
+                如果同时填写附件和外部链接，系统会优先保存附件地址。
+            </div>
         </div>
     </section>
 </main>
@@ -146,17 +124,18 @@
         return false;
     }
 
-    async function submitFeedback(roleId, content, evidenceUrl) {
+    async function submitFeedback(roleId, content, evidenceUrl, evidenceFile) {
+        const formData = new FormData();
+        formData.append("content", content);
+        if (evidenceUrl) formData.append("evidence_url", evidenceUrl);
+        if (evidenceFile) formData.append("evidence_file", evidenceFile);
+
         const response = await fetch(`${API_BASE}/api/roles/${roleId}/feedbacks`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({
-                content: content,
-                evidence_url: evidenceUrl || ""
-            })
+            body: formData
         });
         const data = await response.json();
         if (!response.ok || (typeof data.code !== "undefined" && data.code !== 200)) {
@@ -175,7 +154,8 @@
         const form = document.getElementById("feedbackForm");
         const submitBtn = document.getElementById("submitBtn");
         const contentEl = document.getElementById("content");
-        const evidenceEl = document.getElementById("evidence_url");
+        const evidenceUrlEl = document.getElementById("evidence_url");
+        const evidenceFileEl = document.getElementById("evidence_file");
 
         if (backToDetailBtn) {
             if (projectId) {
@@ -202,7 +182,8 @@
         form.addEventListener("submit", async function (event) {
             event.preventDefault();
             const content = (contentEl.value || "").trim();
-            const evidenceUrl = (evidenceEl.value || "").trim();
+            const evidenceUrl = (evidenceUrlEl.value || "").trim();
+            const evidenceFile = evidenceFileEl.files && evidenceFileEl.files[0] ? evidenceFileEl.files[0] : null;
 
             if (!content) {
                 showToast(false, "请输入成果内容");
@@ -213,11 +194,12 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
             try {
-                await submitFeedback(roleId, content, evidenceUrl);
+                await submitFeedback(roleId, content, evidenceUrl, evidenceFile);
                 showToast(true, "提交成功");
                 alert("成果反馈提交成功");
                 contentEl.value = "";
-                evidenceEl.value = "";
+                evidenceUrlEl.value = "";
+                evidenceFileEl.value = "";
             } catch (error) {
                 showToast(false, error.message || "提交失败");
                 alert(error.message || "提交失败");

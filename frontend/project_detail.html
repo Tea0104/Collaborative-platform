@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -11,349 +11,88 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
         body { background-color: #f5f7fa; color: #333; line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-
-        header {
-            background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%);
-            color: white;
-            padding: 15px 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
+        header { background: linear-gradient(135deg, #2c7be5 0%, #1c5bb8 100%); color: white; padding: 15px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
         .header-container { display: flex; justify-content: space-between; align-items: center; }
         .logo h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-
-        .back-link {
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
+        .back-link { color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 500; }
         .header-actions { display: flex; align-items: center; gap: 12px; }
-        .header-logout {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
+        .header-logout { background-color: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.35); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; }
         .header-logout:hover { background-color: rgba(255, 255, 255, 0.3); }
-
-        .breadcrumb {
-            background-color: white;
-            padding: 15px 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
+        .breadcrumb { background-color: white; padding: 15px 0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
         .breadcrumb a { color: #666; text-decoration: none; }
         .breadcrumb a:hover { color: #2c7be5; }
-
-        .project-detail {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .project-main {
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
+        .project-detail { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin: 30px 0; }
+        .project-main { background-color: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
         .project-sidebar { display: flex; flex-direction: column; gap: 20px; }
-
-        .project-header {
-            margin-bottom: 30px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
-        }
-
-        .project-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: #222;
-        }
-
-        .project-org {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            color: #666;
-        }
-
-        .org-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #2c7be5, #1c5bb8);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
+        .project-header { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .project-title { font-size: 28px; font-weight: 700; margin-bottom: 15px; color: #222; }
+        .project-org { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; color: #666; }
+        .org-avatar { width: 50px; height: 50px; background: linear-gradient(135deg, #2c7be5, #1c5bb8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
         .project-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-
-        .tag {
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
+        .tag { padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: 500; }
         .tag-status { background-color: #e1f0ff; color: #2c7be5; }
-
         .section { margin-bottom: 30px; }
-
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c7be5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f7ff;
-        }
-
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #2c7be5; display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid #f0f7ff; }
         .project-description { color: #555; line-height: 1.8; margin-bottom: 12px; }
-
         .goals-list { list-style: none; padding-left: 20px; }
-
-        .goals-list li {
-            margin-bottom: 10px;
-            position: relative;
-            padding-left: 25px;
-            color: #555;
-        }
-
-        .goals-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #0a8f5c;
-            font-weight: bold;
-        }
-
+        .goals-list li { margin-bottom: 10px; position: relative; padding-left: 25px; color: #555; }
+        .goals-list li::before { content: "✓"; position: absolute; left: 0; color: #0a8f5c; font-weight: bold; }
         .timeline { position: relative; padding-left: 30px; }
-
-        .timeline::before {
-            content: "";
-            position: absolute;
-            left: 10px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #e0e0e0;
-        }
-
+        .timeline::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background-color: #e0e0e0; }
         .timeline-item { position: relative; margin-bottom: 20px; }
-
-        .timeline-item::before {
-            content: "";
-            position: absolute;
-            left: -25px;
-            top: 5px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #2c7be5;
-            border: 2px solid white;
-            box-shadow: 0 0 0 3px #2c7be5;
-        }
-
+        .timeline-item::before { content: ""; position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background-color: #2c7be5; border: 2px solid white; box-shadow: 0 0 0 3px #2c7be5; }
         .timeline-date { font-size: 14px; color: #666; margin-bottom: 5px; }
-
-        .sidebar-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
+        .sidebar-card { background-color: white; border-radius: 10px; padding: 25px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
         .info-grid { display: grid; gap: 15px; }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
+        .info-item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
         .info-label { color: #666; font-weight: 500; }
         .info-value { color: #222; font-weight: 500; text-align: right; word-break: break-all; }
-
-        .roles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .role-card {
-            background-color: #f8fafd;
-            border: 1px solid #e1e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .role-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
+        .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .role-card { background-color: #f8fafd; border: 1px solid #e1e8f0; border-radius: 8px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s; }
+        .role-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         .role-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #222; }
-
         .role-requirements { list-style: none; margin-bottom: 15px; }
-
-        .role-requirements li {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .role-requirements li::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: #2c7be5;
-        }
-
-        .role-status {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 15px;
-        }
-
+        .role-requirements li { font-size: 14px; color: #666; margin-bottom: 5px; padding-left: 20px; position: relative; }
+        .role-requirements li::before { content: "•"; position: absolute; left: 0; color: #2c7be5; }
+        .role-status { font-size: 12px; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 15px; }
         .status-available { background-color: #e1f0ff; color: #2c7be5; }
         .status-full { background-color: #ffe6e6; color: #d32f2f; }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background-color: #2c7be5;
-            color: white;
-            width: 100%;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background-color: #1c5bb8;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(44, 123, 229, 0.3);
-        }
-
-        .btn-secondary {
-            background-color: #f8f9fa;
-            color: #555;
-            border: 1px solid #ddd;
-            width: 100%;
-        }
-
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-primary { background-color: #2c7be5; color: white; width: 100%; }
+        .btn-primary:hover:not(:disabled) { background-color: #1c5bb8; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(44, 123, 229, 0.3); }
+        .btn-secondary { background-color: #f8f9fa; color: #555; border: 1px solid #ddd; width: 100%; }
         .btn-secondary:hover:not(:disabled) { background-color: #e9ecef; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .application-status {
-            background-color: #f8fafd;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .status-badge {
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
+        .application-status { background-color: #f8fafd; border-radius: 8px; padding: 20px; margin-top: 20px; }
+        .status-badge { padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: 500; }
         .badge-pending { background-color: #fff2cc; color: #b38f00; }
         .badge-approved { background-color: #d9f2e6; color: #0a8f5c; }
         .badge-rejected { background-color: #ffe6e6; color: #d32f2f; }
         .badge-cancelled { background-color: #eceff3; color: #5c6670; }
-
         .status-details { color: #666; font-size: 14px; margin-top: 10px; }
-
+        .feedback-list { display: grid; gap: 12px; }
+        .feedback-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+        .feedback-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .feedback-role { font-weight: 600; color: #0f172a; }
+        .feedback-meta { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+        .feedback-content { white-space: pre-wrap; color: #334155; margin-bottom: 8px; }
+        .feedback-link a { color: #2563eb; text-decoration: none; }
+        .feedback-link a:hover { text-decoration: underline; }
         .hidden { display: none !important; }
-
-        .error-box {
-            color: #b00020;
-            background: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        footer {
-            background-color: #222;
-            color: #aaa;
-            padding: 40px 0 20px;
-            margin-top: 40px;
-        }
-
-        .copyright {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            font-size: 14px;
-            color: #888;
-        }
-
-        @media (max-width: 992px) {
-            .project-detail { grid-template-columns: 1fr; }
-            .roles-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 768px) {
-            .header-container { flex-direction: column; gap: 15px; text-align: center; }
-            .project-main { padding: 20px; }
-            .sidebar-card { padding: 20px; }
-        }
+        .error-box { color: #b00020; background: #fff; border-radius: 10px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        footer { background-color: #222; color: #aaa; padding: 40px 0 20px; margin-top: 40px; }
+        .copyright { text-align: center; padding-top: 20px; border-top: 1px solid #444; font-size: 14px; color: #888; }
+        @media (max-width: 992px) { .project-detail { grid-template-columns: 1fr; } .roles-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .header-container { flex-direction: column; gap: 15px; text-align: center; } .project-main { padding: 20px; } .sidebar-card { padding: 20px; } }
     </style>
 </head>
 <body class="page">
 <header>
     <div class="container header-container">
-        <div class="logo">
-            <h1><i class="fas fa-users-cog"></i> 多角色共创平台</h1>
-        </div>
+        <div class="logo"><h1><i class="fas fa-users-cog"></i> 多角色共创平台</h1></div>
         <div class="header-actions">
-            <a href="project_list.html" class="back-link">
-                <i class="fas fa-arrow-left"></i> 返回项目列表
-            </a>
-            <a href="#" class="back-link" id="project-progress-link">
-                <i class="fas fa-chart-line"></i> 查看项目进度
-            </a>
+            <a href="project_list.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回项目列表</a>
+            <a href="#" class="back-link" id="project-progress-link"><i class="fas fa-chart-line"></i> 查看项目进度</a>
             <button class="header-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
@@ -393,9 +132,14 @@
 
             <div class="section">
                 <h2 class="section-title"><i class="fas fa-bullseye"></i> 项目目标</h2>
-                <ul class="goals-list" id="project-goals">
-                    <li>暂无项目目标信息</li>
-                </ul>
+                <ul class="goals-list" id="project-goals"><li>暂无项目目标信息</li></ul>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-file-upload"></i> 项目成果反馈</h2>
+                <div id="feedback-list" class="feedback-list">
+                    <div class="feedback-item">正在加载成果反馈...</div>
+                </div>
             </div>
 
             <div class="section">
@@ -417,26 +161,11 @@
             <div class="sidebar-card">
                 <h3 style="margin-bottom: 20px; color: #222; font-size: 18px;">项目信息</h3>
                 <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">发布机构</span>
-                        <span class="info-value" id="info-company">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">项目状态</span>
-                        <span class="info-value" id="info-status">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">发布时间</span>
-                        <span class="info-value" id="info-publish-time">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">截止时间</span>
-                        <span class="info-value" id="info-deadline">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">成果链接</span>
-                        <span class="info-value" id="project-result-url">未设置</span>
-                    </div>
+                    <div class="info-item"><span class="info-label">发布机构</span><span class="info-value" id="info-company">-</span></div>
+                    <div class="info-item"><span class="info-label">项目状态</span><span class="info-value" id="info-status">-</span></div>
+                    <div class="info-item"><span class="info-label">发布时间</span><span class="info-value" id="info-publish-time">-</span></div>
+                    <div class="info-item"><span class="info-label">截止时间</span><span class="info-value" id="info-deadline">-</span></div>
+                    <div class="info-item"><span class="info-label">成果链接</span><span class="info-value" id="project-result-url">未设置</span></div>
                 </div>
             </div>
 
@@ -461,9 +190,7 @@
 
 <footer>
     <div class="container page-container">
-        <div class="copyright">
-            <p>© 2026 多角色共创平台 保留所有权利</p>
-        </div>
+        <div class="copyright"><p>© 2026 多角色共创平台 保留所有权利</p></div>
     </div>
 </footer>
 
@@ -475,6 +202,7 @@
     const projectId = new URLSearchParams(window.location.search).get("id");
 
     let currentProjectApplications = [];
+
     async function logout() {
         const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
         if (authToken) {
@@ -483,10 +211,8 @@
                     method: "POST",
                     headers: { Authorization: `Bearer ${authToken}` }
                 });
-            } catch (_) {
-            }
+            } catch (_) {}
         }
-
         localStorage.removeItem("auth_token");
         localStorage.removeItem("token");
         localStorage.removeItem("username");
@@ -580,6 +306,13 @@
         return "待审核";
     }
 
+    function renderEvidenceLink(value) {
+        const evidence = String(value || "").trim();
+        if (!evidence) return "附件：无";
+        const label = evidence.startsWith("/uploads/") ? "下载附件" : "查看外部链接";
+        return `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+
     function setProjectInfo(project) {
         const name = project.project_name || "-";
         const company = project.company || "-";
@@ -588,7 +321,6 @@
         const description = project.description || "暂无描述";
         const publishTime = formatDate(project.publish_time);
         const deadline = formatDate(project.deadline);
-        const resultUrl = project.result_url || "未设置";
 
         document.getElementById("project-title").textContent = name;
         document.getElementById("project-company").textContent = company;
@@ -702,6 +434,26 @@
         }
     }
 
+    function renderFeedbackPreview(items) {
+        const list = document.getElementById("feedback-list");
+        if (!Array.isArray(items) || !items.length) {
+            list.innerHTML = '<div class="feedback-item">当前项目还没有成果反馈。</div>';
+            return;
+        }
+
+        list.innerHTML = items.slice(0, 6).map((item) => `
+            <div class="feedback-item">
+                <div class="feedback-top">
+                    <div class="feedback-role">${escapeHtml(item.role_name || `岗位 ${item.role_id || "-"}`)}</div>
+                    <span class="status-badge ${String(item.status || "").toLowerCase() === "processed" ? "badge-approved" : "badge-pending"}">${escapeHtml(item.status || "-")}</span>
+                </div>
+                <div class="feedback-meta">提交人：${escapeHtml(item.user_id || "-")} | 提交时间：${escapeHtml(formatDate(item.created_at))}</div>
+                <div class="feedback-content">${escapeHtml(item.content || "")}</div>
+                <div class="feedback-link">${renderEvidenceLink(item.evidence_url)}</div>
+            </div>
+        `).join("");
+    }
+
     async function loadMyApplications() {
         if (!token || !isStudentUser()) {
             currentProjectApplications = [];
@@ -765,10 +517,14 @@
 
         try {
             await loadMyApplications();
-            const detail = await apiFetch(`/api/projects/${projectId}`);
+            const [detail, feedbackData] = await Promise.all([
+                apiFetch(`/api/projects/${projectId}`),
+                apiFetch(`/api/projects/${projectId}/feedbacks`)
+            ]);
             setProjectInfo(detail.project || {});
             renderRoles(Array.isArray(detail.roles) ? detail.roles : []);
             renderApplicationStatus();
+            renderFeedbackPreview(Array.isArray(feedbackData.feedbacks) ? feedbackData.feedbacks : []);
         } catch (err) {
             showError(err.message);
         }
@@ -776,15 +532,7 @@
 
     window.applyForRole = applyForRole;
     window.logout = logout;
-
-
     initPage();
 </script>
 </body>
 </html>
-
-
-
-
-
-

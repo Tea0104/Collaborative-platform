@@ -16,7 +16,31 @@ except ImportError:
     from projects import projects_bp
 
 
+def load_local_env() -> None:
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    env_paths = [
+        os.path.join(base_dir, ".env.local"),
+        os.path.join(base_dir, ".env"),
+    ]
+
+    for env_path in env_paths:
+        if not os.path.exists(env_path):
+            continue
+
+        with open(env_path, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+
+
 def create_app() -> Flask:
+    load_local_env()
     app = Flask(__name__)
     app.json.ensure_ascii = False
     frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))

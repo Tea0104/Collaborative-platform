@@ -48,7 +48,7 @@
 
 <main class="container page-container">
     <h1 class="page-title">项目发布</h1>
-    <p class="page-desc">创建新的项目并发布招募信息。</p>
+    <p class="page-desc">创建新的项目，并在发布后进入项目详情页继续生成岗位建议。</p>
 
     <section class="card">
         <h2><i class="fas fa-plus-circle"></i> 发布项目</h2>
@@ -61,20 +61,20 @@
             <textarea id="proj-desc" placeholder="请输入项目描述"></textarea>
         </div>
         <div class="field">
-            <label>公司/机构名称</label>
-            <input id="proj-company" placeholder="默认使用账号中的学校/单位">
+            <label>公司 / 机构名称</label>
+            <input id="proj-company" placeholder="默认使用当前账号的学校 / 单位信息">
         </div>
         <div class="field">
-            <label>预计市场（可选）</label>
-            <input id="proj-expected-market" placeholder="例如：校园市场 / 文旅市场">
+            <label>预期市场（可选）</label>
+            <input id="proj-expected-market" placeholder="例如：校园市场 / 企业市场">
         </div>
         <div class="field">
             <label>工作方式（可选）</label>
-            <input id="proj-work-mode" placeholder="例如：远程协作 / 线下驻场">
+            <input id="proj-work-mode" placeholder="例如：远程协作 / 线下驻场 / 混合协作">
         </div>
         <div class="field">
             <label>参与人数（可选）</label>
-            <input id="proj-participant-count" placeholder="例如：5-8人">
+            <input id="proj-participant-count" placeholder="例如：3-5人">
         </div>
         <div class="field">
             <label>项目状态</label>
@@ -113,7 +113,7 @@
     }
 
     function asEnterprise() {
-        return ["企业", "company", "Company"].includes(userType);
+        return ["企业", "company", "Company", "enterprise", "Enterprise"].includes(userType);
     }
 
     async function apiFetch(path, options = {}) {
@@ -151,17 +151,22 @@
             project_status: document.getElementById("proj-status").value.trim(),
             deadline: document.getElementById("proj-deadline").value.trim()
         };
+
         if (!payload.project_name) {
             showMsg("create-project-msg", false, "项目名称不能为空");
             return;
         }
+
         try {
             const data = await apiFetch("/api/enterprise/projects", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-            showMsg("create-project-msg", true, `项目发布成功，项目ID：${data.project_id}`);
+            showMsg("create-project-msg", true, `项目发布成功，正在跳转到项目详情页（ID: ${data.project_id}）`);
+            window.setTimeout(() => {
+                window.location.href = `/enterprisecenter/projects/${data.project_id}`;
+            }, 800);
         } catch (err) {
             showMsg("create-project-msg", false, err.message);
         }

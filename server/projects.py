@@ -1,8 +1,14 @@
+import json
 import logging
+import os
 import re
+import uuid
 from datetime import datetime
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from flask import Blueprint, jsonify, request
+from werkzeug.utils import secure_filename
 
 try:
     from .auth import login_required, role_required
@@ -44,9 +50,46 @@ projects_bp = Blueprint("projects", __name__)
 
 PROJECT_STATUS = {"草稿", "招募中", "进行中", "已完成", "已终止"}
 ROLE_STATUS = {"招募中", "进行中", "已完成"}
+ACTION_VERBS = (
+    "实现",
+    "搭建",
+    "联调",
+    "测试",
+    "上线",
+    "优化",
+    "设计",
+    "开发",
+    "部署",
+    "implement",
+    "build",
+    "integrate",
+    "test",
+    "deploy",
+)
 
-
-# ===== 企业侧 =====
+DEEPSEEK_API_URL = os.environ.get("DEEPSEEK_API_URL", "https://api.deepseek.com/chat/completions").strip()
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat").strip() or "deepseek-chat"
+DEEPSEEK_TIMEOUT = float(os.environ.get("DEEPSEEK_TIMEOUT", "15").strip() or "15")
+FEEDBACK_UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "uploads", "feedbacks"))
+MAX_FEEDBACK_FILE_SIZE = 20 * 1024 * 1024
+ALLOWED_FEEDBACK_EXTENSIONS = {
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".ppt",
+    ".pptx",
+    ".xls",
+    ".xlsx",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".txt",
+    ".md",
+}
 
 
 @projects_bp.route("/api/enterprise/projects", methods=["GET"])
@@ -105,7 +148,6 @@ def enterprise_create_project():
 def enterprise_update_project(project_id: int):
     user_id = request.current_user["user_id"]
     data = request.json or {}
-
     allow_fields = {
         "project_name",
         "description",
@@ -203,7 +245,6 @@ def enterprise_create_role(project_id: int):
 def enterprise_update_role(role_id: int):
     user_id = request.current_user["user_id"]
     data = request.json or {}
-
     allow_fields = {"role_name", "task_desc", "skill_require", "limit_num", "join_num", "role_status", "task_deadline"}
     update_fields = {k: v for k, v in data.items() if k in allow_fields}
     if not update_fields:
@@ -222,13 +263,6 @@ def enterprise_update_role(role_id: int):
         if int(update_fields["join_num"]) > int(update_fields["limit_num"]):
             return jsonify({"success": False, "message": "join_num 不能超过 limit_num"}), 400
 
-    sets = []
-    params = []
-    for k, v in update_fields.items():
-        sets.append(f"{k} = ?")
-        params.append(v)
-    params.append(role_id)
-
     role_res = get_role(role_id)
     if role_res["code"] != 200:
         return jsonify({"success": False, "message": role_res["msg"]}), 404
@@ -240,9 +274,6 @@ def enterprise_update_role(role_id: int):
     if res["code"] != 200:
         return jsonify({"success": False, "message": res["msg"]}), 400
     return jsonify({"success": True, "message": "更新成功"})
-
-
-# ===== 公共侧 =====
 
 
 @projects_bp.route("/api/projects", methods=["GET"])
@@ -268,7 +299,13 @@ def public_project_detail(project_id: int):
 @projects_bp.route("/api/roles/<int:role_id>/feedbacks", methods=["POST"])
 @login_required
 def submit_role_feedback(role_id: int):
-    data = request.json or {}
+    if request.content_type and request.content_type.startswith("multipart/form-data"):
+        data = request.form or {}
+        upload_file = request.files.get("evidence_file")
+    else:
+        data = request.json or {}
+        upload_file = None
+
     content = (data.get("content") or "").strip()
     evidence_url = (data.get("evidence_url") or "").strip()
     user_id = request.current_user["user_id"]
@@ -276,10 +313,16 @@ def submit_role_feedback(role_id: int):
     if not content:
         return jsonify({"code": 400, "msg": "content is required"}), 400
 
+    if upload_file and upload_file.filename:
+        try:
+            evidence_url = _save_feedback_file(upload_file)
+        except ValueError as exc:
+            return jsonify({"code": 400, "msg": str(exc)}), 400
+
     res = add_role_feedback(role_id=role_id, user_id=user_id, content=content, evidence_url=evidence_url)
     if res["code"] != 200:
         return jsonify({"code": res["code"], "msg": res["msg"]}), res["code"]
-    return jsonify({"code": 200, "msg": "successfully submitted"})
+    return jsonify({"code": 200, "msg": "successfully submitted", "evidence_url": evidence_url})
 
 
 @projects_bp.route("/api/projects/<int:project_id>/feedbacks", methods=["GET"])
@@ -304,26 +347,34 @@ def set_feedback_status(feedback_id: int):
     return jsonify({"code": 200, "msg": "updated"})
 
 
-ACTION_VERBS = (
-    "实现",
-    "搭建",
-    "联调",
-    "测试",
-    "上线",
-    "优化",
-    "设计",
-    "开发",
-    "部署",
-    "implement",
-    "build",
-    "integrate",
-    "test",
-    "deploy",
-)
-
-
 def _normalize_role_name(name: str) -> str:
     return re.sub(r"\s+", "", str(name or "")).strip()
+
+
+def _allowed_feedback_file(filename: str) -> bool:
+    ext = os.path.splitext(filename or "")[1].lower()
+    return ext in ALLOWED_FEEDBACK_EXTENSIONS
+
+
+def _save_feedback_file(file_storage) -> str:
+    filename = secure_filename(file_storage.filename or "")
+    if not filename:
+        raise ValueError("uploaded file is empty")
+    if not _allowed_feedback_file(filename):
+        raise ValueError("unsupported file type")
+
+    os.makedirs(FEEDBACK_UPLOAD_DIR, exist_ok=True)
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    if size > MAX_FEEDBACK_FILE_SIZE:
+        raise ValueError("file is too large, max 20MB")
+
+    ext = os.path.splitext(filename)[1].lower()
+    saved_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:10]}{ext}"
+    save_path = os.path.join(FEEDBACK_UPLOAD_DIR, saved_name)
+    file_storage.save(save_path)
+    return f"/uploads/feedbacks/{saved_name}"
 
 
 def _coerce_limit_num(value) -> int:
@@ -348,7 +399,7 @@ def _sanitize_task_desc(task_desc: str, role_name: str) -> str:
     text = str(task_desc or "").strip()
     hit_count = sum(1 for verb in ACTION_VERBS if verb.lower() in text.lower())
     if len(text) < 12 or hit_count < 2:
-        return f"负责{role_name}相关模块的实现与联调，完成测试并支持上线交付。"
+        return f"负责{role_name}相关模块的实现、联调与测试，保证功能按时交付。"
     return text
 
 
@@ -360,6 +411,120 @@ def _sanitize_task_deadline(task_deadline: str, project_deadline: str) -> str:
     if role_dt is None or role_dt > project_dt:
         return str(project_deadline or "").strip()
     return str(task_deadline or "").strip()
+
+
+def _sanitize_text_field(value, fallback: str = "", max_len: int = 500) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return fallback
+    if len(text) > max_len:
+        return text[:max_len].strip()
+    return text
+
+
+def _extract_json_object(text: str) -> dict:
+    raw = str(text or "").strip()
+    if not raw:
+        raise ValueError("empty model content")
+
+    fenced_match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", raw, re.S)
+    if fenced_match:
+        raw = fenced_match.group(1).strip()
+    else:
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start >= 0 and end > start:
+            raw = raw[start : end + 1]
+
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        raise ValueError("model output is not a JSON object")
+    return parsed
+
+
+def _build_ai_contract_payload(project: dict, payload: dict) -> dict:
+    project_name = (payload.get("project_name") or project.get("project_name") or "").strip()
+    description = (payload.get("description") or project.get("description") or "").strip()
+    deadline = (payload.get("deadline") or project.get("deadline") or "").strip()
+    work_mode = (payload.get("work_mode") or project.get("work_mode") or "").strip()
+    expected_market = (payload.get("expected_market") or project.get("expected_market") or "").strip()
+    participant_count = (payload.get("participant_count") or project.get("participant_count") or "").strip()
+    max_roles = payload.get("max_roles", 4)
+
+    try:
+        max_roles = int(max_roles)
+    except Exception:
+        max_roles = 4
+
+    return {
+        "project_name": project_name,
+        "description": description,
+        "deadline": deadline,
+        "work_mode": work_mode,
+        "expected_market": expected_market,
+        "participant_count": participant_count,
+        "language": "zh-CN",
+        "max_roles": max(1, min(5, max_roles)),
+    }
+
+
+def _call_deepseek_role_suggest(contract_payload: dict) -> dict:
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+
+    system_prompt = (
+        "You are a project staffing assistant. "
+        "Return only valid JSON. "
+        "Generate practical roles for an enterprise-student collaboration project."
+    )
+    user_prompt = (
+        "Return a JSON object with keys roles, assumptions, questions_to_confirm.\n"
+        "roles must be a non-empty array.\n"
+        "Each role must contain role_name, task_desc, skill_require, limit_num, task_deadline.\n"
+        "role_name must be unique.\n"
+        "limit_num must be an integer between 1 and 3.\n"
+        "task_deadline must not be later than the project deadline when a deadline exists.\n"
+        "Keep the content concise and practical.\n"
+        f"Input JSON:\n{json.dumps(contract_payload, ensure_ascii=False)}"
+    )
+    body = {
+        "model": DEEPSEEK_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.5,
+        "stream": False,
+    }
+
+    req = urllib_request.Request(
+        DEEPSEEK_API_URL,
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib_request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
+            raw = resp.read().decode("utf-8")
+    except urllib_error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"DeepSeek HTTP {exc.code}: {detail[:300]}") from exc
+    except urllib_error.URLError as exc:
+        raise RuntimeError(f"DeepSeek request failed: {exc.reason}") from exc
+
+    parsed = json.loads(raw)
+    choices = parsed.get("choices") or []
+    message = choices[0].get("message") if choices else {}
+    result = _extract_json_object((message or {}).get("content") or "")
+    if not isinstance(result.get("roles"), list) or not result.get("roles"):
+        raise ValueError("DeepSeek returned empty roles")
+    return result
 
 
 def _generate_stub_roles(description: str, project_deadline: str = "") -> list[dict]:
@@ -378,31 +543,15 @@ def _generate_stub_roles(description: str, project_deadline: str = "") -> list[d
         )
 
     if any(k in desc for k in ("前端", "网页", "小程序", "frontend", "web")):
-        add_role(
-            "前端开发",
-            "负责页面实现与接口联调，完成兼容性测试并推动上线。",
-            "HTML/CSS/JavaScript, API联调",
-            2,
-        )
+        add_role("前端开发", "负责页面实现、接口联调和基础交互优化。", "HTML/CSS/JavaScript, API联调", 2)
     if any(k in desc for k in ("接口", "数据库", "后端", "backend", "api", "db")):
-        add_role(
-            "后端开发",
-            "负责接口实现与数据库搭建，联调测试后支持上线发布。",
-            "Python/Flask, SQL, RESTful API",
-            1,
-        )
+        add_role("后端开发", "负责接口实现、数据库设计及联调测试。", "Python/Flask, SQL, RESTful API", 1)
     if any(k in desc for k in ("推广", "运营", "用户", "增长", "operation", "community")):
-        add_role(
-            "运营支持",
-            "负责用户触达与运营执行，跟踪数据并测试转化策略。",
-            "运营策划, 用户沟通, 数据分析",
-            1,
-        )
+        add_role("运营支持", "负责用户触达、反馈收集和基础运营执行。", "运营策划, 用户沟通, 数据分析", 1)
 
-    # Keep a minimum default role set for demonstration.
-    add_role("产品经理", "负责需求梳理与方案设计，组织联调测试并推进上线。", "需求分析, 原型设计, 项目协作", 1)
-    add_role("前端开发", "负责页面实现与接口联调，完成兼容性测试并推动上线。", "HTML/CSS/JavaScript, API联调", 2)
-    add_role("后端开发", "负责接口实现与数据库搭建，联调测试后支持上线发布。", "Python/Flask, SQL, RESTful API", 1)
+    add_role("产品经理", "负责需求梳理、方案设计和项目推进。", "需求分析, 原型设计, 项目协作", 1)
+    add_role("前端开发", "负责页面实现、接口联调和基础交互优化。", "HTML/CSS/JavaScript, API联调", 2)
+    add_role("后端开发", "负责接口实现、数据库设计及联调测试。", "Python/Flask, SQL, RESTful API", 1)
     return roles
 
 
@@ -426,7 +575,7 @@ def _clean_roles_for_persist(raw_roles: list[dict], project_deadline: str, exist
             {
                 "role_name": candidate,
                 "task_desc": _sanitize_task_desc(item.get("task_desc"), candidate),
-                "skill_require": str(item.get("skill_require") or "通用协作与岗位基础技能").strip(),
+                "skill_require": _sanitize_text_field(item.get("skill_require"), "通用协作与岗位基础技能", 300),
                 "limit_num": _coerce_limit_num(item.get("limit_num", 1)),
                 "task_deadline": _sanitize_task_deadline(item.get("task_deadline", ""), project_deadline),
             }
@@ -434,45 +583,76 @@ def _clean_roles_for_persist(raw_roles: list[dict], project_deadline: str, exist
     return cleaned
 
 
-def _self_check_ai_suggest_cleaning():
-    """Unit-level self-check example: run manually in Flask shell."""
-    sample = [
-        {"role_name": " 前端 开发 ", "task_desc": "做页面", "limit_num": 9, "task_deadline": "2099-01-01"},
-        {"role_name": "前端开发", "task_desc": "实现并测试接口页面", "limit_num": 0, "task_deadline": ""},
-    ]
-    cleaned = _clean_roles_for_persist(sample, "2026-12-31", {"产品经理"})
-    logging.info("ai-suggest self-check input=%s", sample)
-    logging.info("ai-suggest self-check output=%s", cleaned)
-    return cleaned
+def _normalize_questions(items) -> list[str]:
+    values: list[str] = []
+    for item in items or []:
+        text = _sanitize_text_field(item, "", 120)
+        if text:
+            values.append(text)
+    return values[:5]
+
+
+def _generate_role_suggestions(project: dict, payload: dict, existing_names: set[str]) -> dict:
+    contract_payload = _build_ai_contract_payload(project, payload)
+    deadline = contract_payload["deadline"]
+    project_name = contract_payload["project_name"]
+    description = contract_payload["description"]
+    fallback_roles = _clean_roles_for_persist(
+        _generate_stub_roles(description=description, project_deadline=deadline),
+        deadline,
+        existing_names,
+    )
+
+    try:
+        llm_result = _call_deepseek_role_suggest(contract_payload)
+        roles = _clean_roles_for_persist(llm_result.get("roles") or [], deadline, existing_names)
+        if not roles:
+            raise ValueError("cleaned roles are empty")
+        return {
+            "roles": roles,
+            "assumptions": _normalize_questions(llm_result.get("assumptions"))
+            or [f"建议基于项目“{project_name or '未命名项目'}”生成。"],
+            "questions_to_confirm": _normalize_questions(llm_result.get("questions_to_confirm")),
+            "provider": "deepseek",
+            "fallback_used": False,
+            "message": "success",
+        }
+    except Exception as exc:
+        logging.warning("ai-suggest fallback: %s", exc)
+        return {
+            "roles": fallback_roles,
+            "assumptions": [
+                f"建议基于项目“{project_name or '未命名项目'}”生成。",
+                "DeepSeek 调用失败，已回退为本地 stub 建议。",
+            ],
+            "questions_to_confirm": ["请在保存前检查岗位名称、职责、技能与人数是否合理。"],
+            "provider": "stub",
+            "fallback_used": True,
+            "message": str(exc),
+        }
 
 
 @projects_bp.route("/api/projects/<int:project_id>/roles/ai-suggest", methods=["POST"])
+@login_required
+@role_required("企业")
 def ai_suggest_project_roles(project_id: int):
     proj = get_project(project_id)
     if proj["code"] != 200:
         return jsonify({"code": 404, "msg": "project not found", "data": None}), 404
 
     project = proj["data"] or {}
+    if project.get("publisher_id") != request.current_user["user_id"]:
+        return jsonify({"code": 403, "msg": "forbidden", "data": None}), 403
+
     payload = request.get_json(silent=True) or {}
-
-    project_name = (payload.get("project_name") or project.get("project_name") or "").strip()
-    description = (payload.get("description") or project.get("description") or "").strip()
-    deadline = (payload.get("deadline") or project.get("deadline") or "").strip()
-
-    raw_roles = _generate_stub_roles(description=description, project_deadline=deadline)
     existing_names = {_normalize_role_name(row.get("role_name", "")) for row in list_roles_by_project(project_id)}
-    roles = _clean_roles_for_persist(raw_roles, deadline, existing_names)
+    result = _generate_role_suggestions(project, payload, existing_names)
 
     logging.info(
-        "ai-suggest project_id=%s project=%s raw_count=%s cleaned_count=%s",
+        "ai-suggest project_id=%s provider=%s fallback=%s role_count=%s",
         project_id,
-        project_name or "",
-        len(raw_roles),
-        len(roles),
+        result["provider"],
+        result["fallback_used"],
+        len(result["roles"]),
     )
-
-    assumptions = [
-        f"当前建议基于项目《{project_name or '未命名项目'}》描述自动生成。",
-        "当前结果为规则 stub，建议人工确认后再保存为正式角色。",
-    ]
-    return jsonify({"code": 200, "msg": "success", "data": {"roles": roles, "assumptions": assumptions}})
+    return jsonify({"code": 200, "msg": result["message"], "data": result})

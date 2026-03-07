@@ -25,6 +25,11 @@
         .kv { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; }
         .k { color: #6b7280; font-size: 13px; }
         .v { color: #111827; font-weight: 600; word-break: break-all; }
+        .status-editor { margin-top: 16px; padding: 14px; border: 1px solid #dbeafe; border-radius: 12px; background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%); }
+        .status-editor-head { font-size: 14px; font-weight: 700; color: #1d4ed8; margin-bottom: 10px; }
+        .status-editor-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .status-select { min-width: 180px; max-width: 240px; padding: 10px 12px; border: 1px solid #bfdbfe; border-radius: 10px; background: #fff; font-size: 14px; color: #0f172a; }
+        .status-save-btn { padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; }
         .list { margin-top: 10px; display: grid; gap: 10px; }
         .item { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
         .item-title { font-weight: 600; color: #111827; }
@@ -36,72 +41,41 @@
         .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
         .section-head h2 { margin: 0; }
         .btn.btn-inline { width: auto; }
+        .hero-action { padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.01em; box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18); }
+        .hero-action i { font-size: 15px; }
+        .btn:disabled { opacity: .6; cursor: not-allowed; }
 
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1200;
-            padding: 20px;
-        }
-
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 1200; padding: 20px; }
         .modal.show { display: flex; }
-
-        .modal-panel {
-            width: min(980px, 100%);
-            max-height: 90vh;
-            overflow: auto;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25);
-            padding: 20px;
-        }
-
-        .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
+        .modal-panel { width: min(980px, 100%); max-height: 90vh; overflow: auto; background: #fff; border-radius: 14px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25); padding: 20px; }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .modal-close-btn { padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; }
         .modal-title { font-size: 22px; font-weight: 700; color: #0f172a; }
         .modal-desc { color: #64748b; font-size: 14px; margin-bottom: 14px; }
+        .meta-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .meta-box h3 { font-size: 14px; color: #1d4ed8; margin-bottom: 6px; }
+        .meta-box ul { padding-left: 18px; color: #334155; font-size: 13px; }
+        .meta-box li + li { margin-top: 4px; }
         .suggest-list { display: grid; gap: 12px; }
         .suggest-card.card { margin-bottom: 0; }
-        .suggest-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .suggest-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px 12px;
-        }
-
+        .suggest-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .suggest-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
         .full-row { grid-column: 1 / -1; }
         .checkline { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid #e2e8f0;
-        }
-
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .label { font-size: 13px; color: #475569; }
+        .input, .textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 10px; font-size: 14px; }
+        .textarea { resize: vertical; min-height: 88px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
+        .modal-actions .btn { min-width: 168px; padding: 14px 18px; border-radius: 12px; font-size: 15px; font-weight: 700; }
+        .modal-actions .btn-secondary { background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
+        .modal-actions .btn-primary { box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18); }
         @media (max-width: 768px) {
             .header-container { flex-direction: column; align-items: flex-start; gap: 10px; }
             .suggest-grid { grid-template-columns: 1fr; }
             .modal-panel { padding: 14px; }
+            .modal-actions { flex-direction: column; }
+            .modal-actions .btn { width: 100%; }
         }
     </style>
 </head>
@@ -120,19 +94,34 @@
 
 <main class="container page-container">
     <h1 class="page-title">项目详情</h1>
-    <p class="page-desc">查看项目基础信息与角色任务列表。</p>
+    <p class="page-desc">查看项目基础信息、岗位列表，并可直接修改项目状态或使用 AI 生成岗位建议。</p>
 
     <section class="card">
         <h2><i class="fas fa-folder-open"></i> 项目基础信息</h2>
         <div id="project-info" class="grid"></div>
+        <div class="status-editor">
+            <div class="status-editor-head"><i class="fas fa-pen-to-square"></i> 项目状态管理</div>
+            <div class="status-editor-row">
+                <select id="project-status-select" class="status-select">
+                    <option value="草稿">草稿</option>
+                    <option value="招募中">招募中</option>
+                    <option value="进行中">进行中</option>
+                    <option value="已完成">已完成</option>
+                    <option value="已终止">已终止</option>
+                </select>
+                <button id="btn-save-project-status" class="btn btn-primary btn-inline status-save-btn" type="button">
+                    <i class="fas fa-floppy-disk"></i> 保存状态
+                </button>
+            </div>
+        </div>
         <div id="project-msg" class="msg"></div>
     </section>
 
     <section class="card">
         <div class="section-head">
-            <h2><i class="fas fa-users"></i> 角色/任务列表</h2>
-            <button id="btn-ai-suggest" class="btn btn-primary btn-inline" type="button">
-                <i class="fas fa-wand-magic-sparkles"></i> AI 生成职责划分
+            <h2><i class="fas fa-users"></i> 岗位 / 任务列表</h2>
+            <button id="btn-ai-suggest" class="btn btn-primary btn-inline hero-action" type="button">
+                <i class="fas fa-wand-magic-sparkles"></i> AI 生成岗位建议
             </button>
         </div>
         <div id="roles-list" class="list"></div>
@@ -143,20 +132,21 @@
 <div id="ai-suggest-modal" class="modal" aria-hidden="true">
     <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
         <div class="modal-head">
-            <div id="ai-modal-title" class="modal-title">AI 职责划分预览</div>
-            <button id="btn-ai-close-top" class="btn btn-outline btn-inline" type="button">
+            <div id="ai-modal-title" class="modal-title">AI 岗位建议预览</div>
+            <button id="btn-ai-close-top" class="btn btn-inline modal-close-btn" type="button">
                 <i class="fas fa-xmark"></i> 关闭
             </button>
         </div>
-        <p class="modal-desc">可编辑建议后再决定是否采用。当前“采用所选”仅保留 UI，下一版本上线。</p>
+        <p class="modal-desc">这里的建议不会自动落库。你可以先编辑，再保存选中的岗位。</p>
+        <div id="ai-suggest-meta"></div>
         <div id="ai-suggest-list" class="suggest-list"></div>
         <div id="ai-suggest-msg" class="msg"></div>
         <div class="modal-actions">
             <button id="btn-ai-preview-only" class="btn btn-secondary btn-inline" type="button">
-                <i class="fas fa-eye"></i> 仅预览
+                <i class="fas fa-eye"></i> 仅关闭预览
             </button>
-            <button id="btn-ai-apply" class="btn btn-primary btn-inline" type="button" disabled title="下一版本上线">
-                <i class="fas fa-check"></i> 采用所选（下一版本上线）
+            <button id="btn-ai-apply" class="btn btn-primary btn-inline" type="button">
+                <i class="fas fa-check"></i> 保存选中岗位
             </button>
         </div>
     </div>
@@ -179,6 +169,7 @@
     const userType = localStorage.getItem("user_type") || "";
 
     let currentProjectId = 0;
+    let currentProject = null;
     let aiSuggestedRoles = [];
 
     function escapeHtml(value) {
@@ -203,7 +194,7 @@
     }
 
     function asEnterprise() {
-        return ["企业", "company", "Company", "enterprise", "Enterprise", "浼佷笟"].includes(userType);
+        return ["企业", "company", "Company", "enterprise", "Enterprise"].includes(userType);
     }
 
     function formatDate(value) {
@@ -216,14 +207,8 @@
     function getProjectIdFromLocation() {
         const pathMatch = window.location.pathname.match(/\/enterprisecenter\/projects\/(\d+)/);
         if (pathMatch) return Number(pathMatch[1]) || 0;
-
         const params = new URLSearchParams(window.location.search);
-        return Number(
-            params.get("project_id") ||
-            params.get("projectId") ||
-            params.get("id") ||
-            0
-        ) || 0;
+        return Number(params.get("project_id") || params.get("projectId") || params.get("id") || 0) || 0;
     }
 
     async function apiFetch(path, options = {}) {
@@ -237,7 +222,7 @@
             data = text ? JSON.parse(text) : {};
         } catch (_) {
             const hint = `${response.status} ${response.statusText}`.trim();
-            throw new Error(`服务返回非 JSON（${hint}），请检查 API_BASE/路由：${API_BASE || "(empty)"}${path}`);
+            throw new Error(`服务返回了非 JSON 响应（${hint}），请检查接口地址：${API_BASE || "(empty)"}${path}`);
         }
 
         if (!response.ok || data.success === false || (typeof data.code === "number" && data.code !== 200)) {
@@ -250,7 +235,10 @@
         const authToken = localStorage.getItem("auth_token") || localStorage.getItem("token") || "";
         if (authToken) {
             try {
-                await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", headers: { Authorization: `Bearer ${authToken}` } });
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${authToken}` }
+                });
             } catch (_) {}
         }
         localStorage.removeItem("auth_token");
@@ -269,6 +257,9 @@
             ["发布时间", formatDate(project.publish_time)],
             ["截止时间", formatDate(project.deadline)],
             ["公司", project.company],
+            ["预期市场", project.expected_market || "-"],
+            ["工作方式", project.work_mode || "-"],
+            ["参与人数", project.participant_count || "-"],
             ["项目描述", project.description]
         ];
         info.innerHTML = fields.map(([k, v]) => `
@@ -277,12 +268,17 @@
                 <div class="v">${escapeHtml(v || "-")}</div>
             </div>
         `).join("");
+
+        const statusSelect = document.getElementById("project-status-select");
+        if (statusSelect) {
+            statusSelect.value = project.project_status || "招募中";
+        }
     }
 
     function renderRoles(roles) {
         const list = document.getElementById("roles-list");
         if (!roles.length) {
-            list.innerHTML = '<div class="empty">该项目暂无角色</div>';
+            list.innerHTML = '<div class="empty">该项目暂时还没有岗位。</div>';
             return;
         }
         list.innerHTML = roles.map((role) => `
@@ -291,7 +287,7 @@
                 <div class="item-sub">任务描述：${escapeHtml(role.task_desc || "-")}</div>
                 <div class="item-sub">技能要求：${escapeHtml(role.skill_require || "-")}</div>
                 <div class="item-sub">人数：${escapeHtml(role.join_num || 0)} / ${escapeHtml(role.limit_num || "-")} | 状态：${escapeHtml(role.role_status || "-")}</div>
-                <div class="item-sub">任务截止：${escapeHtml(formatDate(role.task_deadline))}</div>
+                <div class="item-sub">截止时间：${escapeHtml(formatDate(role.task_deadline))}</div>
             </div>
         `).join("");
     }
@@ -312,6 +308,26 @@
         if (text.includes("T")) return text.slice(0, 16);
         if (text.includes(" ")) return text.replace(" ", "T").slice(0, 16);
         return text;
+    }
+
+    function renderAiMeta(data) {
+        const meta = document.getElementById("ai-suggest-meta");
+        const assumptions = Array.isArray(data.assumptions) ? data.assumptions : [];
+        const questions = Array.isArray(data.questions_to_confirm) ? data.questions_to_confirm : [];
+        const provider = data.provider || "unknown";
+        const fallbackLine = data.fallback_used ? "<li>本次为回退结果，请优先人工核对。</li>" : "";
+
+        meta.innerHTML = `
+            <div class="meta-box">
+                <h3>生成信息</h3>
+                <ul>
+                    <li>来源：${escapeHtml(provider)}</li>
+                    ${fallbackLine}
+                    ${assumptions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+                    ${questions.map((item) => `<li>待确认：${escapeHtml(item)}</li>`).join("")}
+                </ul>
+            </div>
+        `;
     }
 
     function bindAiSuggestInputEvents() {
@@ -336,39 +352,39 @@
     function renderAiSuggestRoles(roles) {
         const container = document.getElementById("ai-suggest-list");
         if (!Array.isArray(roles) || !roles.length) {
-            container.innerHTML = '<div class="card suggest-card"><div class="empty">暂无 AI 建议结果</div></div>';
+            container.innerHTML = '<div class="card suggest-card"><div class="empty">暂无 AI 建议结果。</div></div>';
             return;
         }
 
         container.innerHTML = roles.map((role, index) => `
             <div class="card suggest-card">
                 <div class="suggest-head">
-                    <strong>建议角色 #${index + 1}</strong>
+                    <strong>建议岗位 #${index + 1}</strong>
                     <label class="checkline">
                         <input type="checkbox" data-index="${index}" data-checked="1" ${role.selected ? "checked" : ""}>
-                        是否采用
+                        保存这个岗位
                     </label>
                 </div>
                 <div class="suggest-grid">
                     <div class="form-group">
-                        <label class="label">role_name</label>
+                        <label class="label">岗位名称</label>
                         <input class="input" type="text" data-index="${index}" data-field="role_name" value="${escapeHtml(role.role_name || "")}">
                     </div>
                     <div class="form-group">
-                        <label class="label">limit_num</label>
+                        <label class="label">人数上限</label>
                         <input class="input" type="number" min="1" max="3" data-index="${index}" data-field="limit_num" value="${escapeHtml(role.limit_num || 1)}">
                     </div>
                     <div class="form-group full-row">
-                        <label class="label">task_desc</label>
+                        <label class="label">岗位职责</label>
                         <textarea class="textarea" rows="3" data-index="${index}" data-field="task_desc">${escapeHtml(role.task_desc || "")}</textarea>
                     </div>
-                    <div class="form-group">
-                        <label class="label">task_deadline</label>
-                        <input class="input" type="datetime-local" data-index="${index}" data-field="task_deadline" value="${escapeHtml(toDateTimeLocal(role.task_deadline))}">
+                    <div class="form-group full-row">
+                        <label class="label">技能要求</label>
+                        <textarea class="textarea" rows="2" data-index="${index}" data-field="skill_require">${escapeHtml(role.skill_require || "")}</textarea>
                     </div>
                     <div class="form-group">
-                        <label class="label">skill_require（只读）</label>
-                        <input class="input" type="text" value="${escapeHtml(role.skill_require || "")}" readonly>
+                        <label class="label">截止时间</label>
+                        <input class="input" type="datetime-local" data-index="${index}" data-field="task_deadline" value="${escapeHtml(toDateTimeLocal(role.task_deadline))}">
                     </div>
                 </div>
             </div>
@@ -377,14 +393,27 @@
         bindAiSuggestInputEvents();
     }
 
+    function buildAiPayload() {
+        return {
+            project_name: currentProject && currentProject.project_name,
+            description: currentProject && currentProject.description,
+            deadline: currentProject && currentProject.deadline,
+            work_mode: currentProject && currentProject.work_mode,
+            expected_market: currentProject && currentProject.expected_market,
+            participant_count: currentProject && currentProject.participant_count,
+            max_roles: 4
+        };
+    }
+
     async function openAiSuggestPreview() {
-        if (!currentProjectId) {
-            alert("缺少 project_id，无法生成建议");
+        if (!currentProjectId || !currentProject) {
+            alert("缺少项目信息，无法生成建议。");
             return;
         }
 
         hideMsg("ai-suggest-msg");
         openAiModal();
+        document.getElementById("ai-suggest-meta").innerHTML = "";
         const listBox = document.getElementById("ai-suggest-list");
         listBox.innerHTML = '<div class="card suggest-card"><div class="empty">正在生成，请稍候...</div></div>';
 
@@ -392,17 +421,98 @@
             const data = await apiFetch(`/api/projects/${currentProjectId}/roles/ai-suggest`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: "{}"
+                body: JSON.stringify(buildAiPayload())
             });
-            if (data.code && Number(data.code) !== 200) {
-                throw new Error(data.msg || "AI 建议生成失败");
-            }
-            const roles = (((data || {}).data || {}).roles);
-            aiSuggestedRoles = (Array.isArray(roles) ? roles : []).map((item) => ({ ...item, selected: true }));
+            const result = (data && data.data) || {};
+            const roles = Array.isArray(result.roles) ? result.roles : [];
+            aiSuggestedRoles = roles.map((item) => ({ ...item, selected: true }));
+            renderAiMeta(result);
             renderAiSuggestRoles(aiSuggestedRoles);
         } catch (err) {
             showMsg("ai-suggest-msg", false, err.message || "AI 建议生成失败");
-            listBox.innerHTML = '<div class="card suggest-card"><div class="empty">加载失败，请重试</div></div>';
+            listBox.innerHTML = '<div class="card suggest-card"><div class="empty">加载失败，请重试。</div></div>';
+        }
+    }
+
+    function collectSelectedRoles() {
+        const selected = aiSuggestedRoles
+            .filter((item) => item && item.selected)
+            .map((item) => ({
+                role_name: String(item.role_name || "").trim(),
+                task_desc: String(item.task_desc || "").trim(),
+                skill_require: String(item.skill_require || "").trim(),
+                limit_num: Number(item.limit_num || 1),
+                task_deadline: String(item.task_deadline || "").trim().replace("T", " ")
+            }));
+
+        if (!selected.length) {
+            throw new Error("请至少勾选一个岗位。");
+        }
+
+        const names = new Set();
+        selected.forEach((item, index) => {
+            if (!item.role_name) throw new Error(`第 ${index + 1} 个岗位缺少岗位名称。`);
+            if (!item.task_desc) throw new Error(`第 ${index + 1} 个岗位缺少岗位职责。`);
+            if (!item.skill_require) throw new Error(`第 ${index + 1} 个岗位缺少技能要求。`);
+            if (!Number.isInteger(item.limit_num) || item.limit_num <= 0) {
+                throw new Error(`第 ${index + 1} 个岗位的人数上限不合法。`);
+            }
+            const normalizedName = item.role_name.toLowerCase();
+            if (names.has(normalizedName)) {
+                throw new Error(`岗位名称重复：${item.role_name}`);
+            }
+            names.add(normalizedName);
+        });
+
+        return selected;
+    }
+
+    async function saveSelectedRoles() {
+        const button = document.getElementById("btn-ai-apply");
+        button.disabled = true;
+        hideMsg("ai-suggest-msg");
+
+        try {
+            const roles = collectSelectedRoles();
+            for (const role of roles) {
+                await apiFetch(`/api/enterprise/projects/${currentProjectId}/roles`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(role)
+                });
+            }
+            await loadProjectAndRoles(currentProjectId);
+            showMsg("roles-msg", true, `已保存 ${roles.length} 个岗位。`);
+            closeAiModal();
+        } catch (err) {
+            showMsg("ai-suggest-msg", false, err.message || "保存岗位失败");
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    async function saveProjectStatus() {
+        const button = document.getElementById("btn-save-project-status");
+        const statusSelect = document.getElementById("project-status-select");
+        if (!button || !statusSelect || !currentProjectId) return;
+
+        const projectStatus = String(statusSelect.value || "").trim();
+        button.disabled = true;
+        hideMsg("project-msg");
+
+        try {
+            await apiFetch(`/api/enterprise/projects/${currentProjectId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ project_status: projectStatus })
+            });
+            if (currentProject) currentProject.project_status = projectStatus;
+            renderProjectInfo(currentProject || { project_status: projectStatus });
+            showMsg("project-msg", true, `项目状态已更新为：${projectStatus}`);
+        } catch (err) {
+            showMsg("project-msg", false, err.message || "更新项目状态失败");
+        } finally {
+            button.disabled = false;
         }
     }
 
@@ -410,7 +520,8 @@
         const projData = await apiFetch("/api/enterprise/projects");
         const projects = Array.isArray(projData.projects) ? projData.projects : [];
         const project = projects.find((p) => Number(p.project_id) === Number(projectId));
-        if (!project) throw new Error("项目不存在或无权限");
+        if (!project) throw new Error("项目不存在或无权限。");
+        currentProject = project;
         renderProjectInfo(project);
 
         const roleData = await apiFetch(`/api/enterprise/projects/${projectId}/roles`);
@@ -420,11 +531,10 @@
 
     function bindEvents() {
         document.getElementById("btn-ai-suggest").addEventListener("click", openAiSuggestPreview);
+        document.getElementById("btn-save-project-status").addEventListener("click", saveProjectStatus);
         document.getElementById("btn-ai-close-top").addEventListener("click", closeAiModal);
         document.getElementById("btn-ai-preview-only").addEventListener("click", closeAiModal);
-        document.getElementById("btn-ai-apply").addEventListener("click", () => {
-            alert("采用所选将于下一版本上线");
-        });
+        document.getElementById("btn-ai-apply").addEventListener("click", saveSelectedRoles);
 
         const modal = document.getElementById("ai-suggest-modal");
         modal.addEventListener("click", (event) => {
@@ -434,21 +544,21 @@
 
     async function initPage() {
         if (!token) {
-            alert("请先登录企业账号");
+            alert("请先登录企业账号。");
             window.location.href = "login.html";
             return;
         }
         if (!asEnterprise()) {
-            alert("只有企业账号可以访问企业中心");
+            alert("只有企业账号可以访问企业中心。");
             window.location.href = "project_list.html";
             return;
         }
 
         currentProjectId = getProjectIdFromLocation();
         if (!currentProjectId) {
-            showMsg("project-msg", false, "缺少 project_id 参数");
-            document.getElementById("project-info").innerHTML = '<div class="empty">无法加载项目详情</div>';
-            document.getElementById("roles-list").innerHTML = '<div class="empty">无法加载角色列表</div>';
+            showMsg("project-msg", false, "缺少 project_id 参数。");
+            document.getElementById("project-info").innerHTML = '<div class="empty">无法加载项目详情。</div>';
+            document.getElementById("roles-list").innerHTML = '<div class="empty">无法加载岗位列表。</div>';
             return;
         }
 
@@ -457,8 +567,8 @@
         } catch (err) {
             showMsg("project-msg", false, err.message);
             showMsg("roles-msg", false, err.message);
-            document.getElementById("project-info").innerHTML = '<div class="empty">加载失败</div>';
-            document.getElementById("roles-list").innerHTML = '<div class="empty">加载失败</div>';
+            document.getElementById("project-info").innerHTML = '<div class="empty">加载失败。</div>';
+            document.getElementById("roles-list").innerHTML = '<div class="empty">加载失败。</div>';
         }
     }
 

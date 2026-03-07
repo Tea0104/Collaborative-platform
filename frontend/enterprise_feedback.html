@@ -28,7 +28,7 @@
         .item-content { color: #1f2937; white-space: pre-wrap; margin: 10px 0; }
         .item-link a { color: #2563eb; text-decoration: none; }
         .item-link a:hover { text-decoration: underline; }
-        .item-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .item-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
         .empty { background: #fff; border: 1px dashed #d1d5db; color: #6b7280; border-radius: 10px; padding: 24px; text-align: center; }
         .msg { margin: 10px 0; padding: 10px 12px; border-radius: 8px; display: none; font-size: 14px; }
         .msg.ok { display: block; background: #dcfce7; color: #166534; }
@@ -50,7 +50,7 @@
 
 <main class="container page-container">
     <h1 class="page-title">待处理成果反馈</h1>
-    <p class="page-desc">仅展示状态为 <code>submitted</code> 的反馈记录。</p>
+    <p class="page-desc">这里只展示状态为 <code>submitted</code> 的反馈记录，支持查看附件并标记为已处理。</p>
     <div class="toolbar">
         <div class="meta">项目 ID：<strong id="project-id-text">-</strong></div>
         <button class="btn btn-secondary" id="refresh-btn"><i class="fas fa-rotate"></i> 刷新</button>
@@ -89,7 +89,7 @@
     }
 
     function asEnterprise() {
-        return ["企业", "company", "Company", "浼佷笟"].includes(userType);
+        return ["企业", "company", "Company", "enterprise", "Enterprise"].includes(userType);
     }
 
     function showMsg(ok, text) {
@@ -122,16 +122,22 @@
         return d.toLocaleString("zh-CN", { hour12: false });
     }
 
+    function renderEvidence(evidence) {
+        const value = String(evidence || "").trim();
+        if (!value) return "附件：无";
+        const label = value.startsWith("/uploads/") ? "下载附件" : "查看外部链接";
+        return `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+
     function renderFeedbacks(items) {
         const listEl = document.getElementById("feedback-list");
         if (!items.length) {
-            listEl.innerHTML = '<div class="empty">当前项目暂无待处理成果反馈</div>';
+            listEl.innerHTML = '<div class="empty">当前项目暂无待处理成果反馈。</div>';
             return;
         }
         listEl.innerHTML = items.map((item) => {
             const feedbackId = Number(item.feedback_id) || 0;
-            const roleText = item.role_name ? `角色：${escapeHtml(item.role_name)}` : `角色ID：${escapeHtml(item.role_id)}`;
-            const evidence = (item.evidence_url || "").trim();
+            const roleText = item.role_name ? `岗位：${escapeHtml(item.role_name)}` : `岗位ID：${escapeHtml(item.role_id)}`;
             return `
                 <article class="item card" id="feedback-${feedbackId}">
                     <div class="item-top">
@@ -139,9 +145,9 @@
                         <span class="badge badge-warning">${escapeHtml(item.status || "submitted")}</span>
                     </div>
                     <div class="item-sub">提交时间：${escapeHtml(formatDate(item.created_at))}</div>
-                    <div class="item-sub">用户ID：${escapeHtml(item.user_id)}</div>
+                    <div class="item-sub">提交用户 ID：${escapeHtml(item.user_id)}</div>
                     <div class="item-content">${escapeHtml(item.content || "")}</div>
-                    <div class="item-link">${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">查看证据链接</a>` : "证据链接：无"}</div>
+                    <div class="item-link">${renderEvidence(item.evidence_url)}</div>
                     <div class="item-actions">
                         <button class="btn btn-primary" onclick="markProcessed(${feedbackId})">
                             <i class="fas fa-check"></i> 标记已处理
@@ -168,7 +174,7 @@
             const rowEl = document.getElementById(`feedback-${feedbackId}`);
             if (rowEl) rowEl.remove();
             if (!document.querySelector("#feedback-list .item")) {
-                document.getElementById("feedback-list").innerHTML = '<div class="empty">当前项目暂无待处理成果反馈</div>';
+                document.getElementById("feedback-list").innerHTML = '<div class="empty">当前项目暂无待处理成果反馈。</div>';
             }
             showMsg(true, "已标记为 processed");
         } catch (err) {
@@ -207,8 +213,8 @@
         const idTextEl = document.getElementById("project-id-text");
         if (!projectId) {
             idTextEl.textContent = "未提供";
-            document.getElementById("feedback-list").innerHTML = '<div class="empty">缺少 project_id 参数</div>';
-            showMsg(false, "请从企业中心选择项目进入，或通过 ?project_id=xx 访问");
+            document.getElementById("feedback-list").innerHTML = '<div class="empty">缺少 project_id 参数。</div>';
+            showMsg(false, "请从企业中心选择项目进入，或通过 ?project_id=xx 访问。");
             return;
         }
 
@@ -216,7 +222,7 @@
         try {
             await loadFeedbacks(projectId);
         } catch (err) {
-            document.getElementById("feedback-list").innerHTML = '<div class="empty">加载失败</div>';
+            document.getElementById("feedback-list").innerHTML = '<div class="empty">加载失败。</div>';
             showMsg(false, err.message);
         }
 
