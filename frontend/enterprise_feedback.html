@@ -42,7 +42,7 @@
             <h1><i class="fas fa-comments"></i> 成果反馈管理</h1>
         </div>
         <div class="header-actions">
-            <a class="back-link" href="/enterprisecenter"><i class="fas fa-arrow-left"></i> 返回企业中心</a>
+            <a class="back-link" href="/enterprise_center.html"><i class="fas fa-arrow-left"></i> 返回企业中心</a>
             <button class="logout-btn btn btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出</button>
         </div>
     </div>
@@ -205,7 +205,7 @@
         }
         if (!asEnterprise()) {
             alert("只有企业账号可以访问该页面");
-            window.location.href = "/enterprisecenter";
+            window.location.href = "/enterprise_center.html";
             return;
         }
 

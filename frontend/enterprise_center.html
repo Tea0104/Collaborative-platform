@@ -63,9 +63,9 @@
     <section class="card section">
         <h2><i class="fas fa-compass"></i> 导航入口</h2>
         <div class="entry-grid">
-            <a class="entry-link" href="/enterprisecenter/publish"><i class="fas fa-plus-circle"></i> 项目发布</a>
-            <a class="entry-link" href="/enterprisecenter/roles"><i class="fas fa-user-tag"></i> 添加角色</a>
-            <a class="entry-link" href="/enterprisecenter/review"><i class="fas fa-clipboard-check"></i> 申请批阅</a>
+            <a class="entry-link" href="/enterprise_publish.html"><i class="fas fa-plus-circle"></i> 项目发布</a>
+            <a class="entry-link" href="/enterprise_roles.html"><i class="fas fa-user-tag"></i> 添加角色</a>
+            <a class="entry-link" href="/enterprise_review.html"><i class="fas fa-clipboard-check"></i> 申请批阅</a>
         </div>
     </section>
 
@@ -172,7 +172,7 @@
                         <div class="item-sub">截止时间：${escapeHtml(formatDate(project.deadline))} | 公司：${escapeHtml(project.company || "-")}</div>
                     </div>
                     <div class="item-actions">
-                        <a class="btn btn-sm btn-outline" href="/enterprisecenter/projects/${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
+                        <a class="btn btn-sm btn-outline" href="/enterprise_project_detail.html?project_id=${projectId}"><i class="fas fa-arrow-right"></i> 查看详情/管理</a>
                         <a class="btn btn-sm btn-primary" href="/enterprise_feedback.html?project_id=${projectId}"><i class="fas fa-comments"></i> 成果反馈</a>
                         <a class="btn btn-sm btn-outline" href="/project_progress.html?project_id=${projectId}"><i class="fas fa-chart-line"></i> 项目进度</a>
                     </div>
