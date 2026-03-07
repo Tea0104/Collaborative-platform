@@ -1,6 +1,7 @@
 .env
 .env.local
 deepseek.env
+DEPLOY.md
 venv/
 __pycache__/
 *.pyc

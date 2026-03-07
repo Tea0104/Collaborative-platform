@@ -99,9 +99,9 @@
     }
 
     function getRedirectPathByUserType(userType) {
-        if (userType === "管理员") return "admin";
+        if (userType === "管理员") return "/admin_dashboard.html";
         if (userType === "企业") return "enterprisecenter";
-        return "index.html";
+        return "/index.html";
     }
 
     async function handleLogin() {
