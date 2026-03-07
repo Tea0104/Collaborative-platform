@@ -149,6 +149,12 @@ def seed_demo_data_if_empty() -> None:
         conn.close()
         return
 
+    _insert_demo_seed_data(cursor)
+    conn.commit()
+    conn.close()
+
+
+def _insert_demo_seed_data(cursor: sqlite3.Cursor) -> None:
     users = [
         ("student1", generate_password_hash("123456"), "学生", "张三", "XX大学计算机学院", "Python,Flask", "13800000001"),
         ("student2", generate_password_hash("123456"), "学生", "李四", "XX大学软件学院", "Vue,前端", "13900000002"),
@@ -227,15 +233,90 @@ def seed_demo_data_if_empty() -> None:
             roles,
         )
 
-    conn.commit()
-    conn.close()
-
 
 # ===== CRUD Functions (team contribution integration) =====
 
-USER_TYPES = {"学生", "企业"}
+USER_TYPES = {"学生", "企业", "管理员"}
 PROJECT_STATUS = {"草稿", "招募中", "进行中", "已完成", "已终止"}
 ROLE_STATUS = {"招募中", "进行中", "已完成"}
+
+
+def ensure_admin_user() -> None:
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        username = "Tea0104"
+        password_hash = generate_password_hash("jhyy10nd")
+
+        cur.execute("SELECT user_id FROM user WHERE username = ?", (username,))
+        row = cur.fetchone()
+        if row:
+            cur.execute(
+                """
+                UPDATE user
+                SET password_hash = ?, user_type = '管理员', real_name = ?, school_company = ?, status = 1
+                WHERE user_id = ?
+                """,
+                (password_hash, username, "系统管理", row["user_id"]),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO user (
+                    username, password_hash, user_type, real_name, school_company,
+                    skill_tags, contact, status, create_time
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    username,
+                    password_hash,
+                    "管理员",
+                    username,
+                    "系统管理",
+                    "",
+                    "",
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ),
+            )
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+
+
+def reset_demo_data_preserve_admin(admin_username: str = "Tea0104") -> Dict:
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT user_id FROM user WHERE username = ? AND user_type = '管理员'", (admin_username,))
+        admin_row = cur.fetchone()
+        if not admin_row:
+            return {"code": 404, "msg": "管理员账号不存在，无法重置数据", "data": None}
+
+        admin_user_id = admin_row["user_id"]
+
+        cur.execute("DELETE FROM auth_tokens WHERE user_id != ?", (admin_user_id,))
+        cur.execute("DELETE FROM role_feedback")
+        cur.execute("DELETE FROM role_application")
+        cur.execute("DELETE FROM role")
+        cur.execute("DELETE FROM project")
+        cur.execute("DELETE FROM user WHERE user_id != ?", (admin_user_id,))
+
+        _insert_demo_seed_data(cur)
+        conn.commit()
+
+        return {
+            "code": 200,
+            "msg": "已清洗历史数据并重新写入测试数据",
+            "data": {"admin_user_id": admin_user_id, "admin_username": admin_username},
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"code": 500, "msg": f"重置演示数据失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
 
 
 def user_add(
@@ -1040,6 +1121,242 @@ def update_feedback_status(feedback_id: int, status: str, operator_user_id: int)
     except Exception as e:
         conn.rollback()
         return {"code": 500, "msg": f"更新反馈状态失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_admin_dashboard_data(limit: int = 8) -> Dict:
+    safe_limit = max(1, min(20, int(limit or 8)))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        stats = {}
+        for key, table in (
+            ("user_count", "user"),
+            ("project_count", "project"),
+            ("role_count", "role"),
+            ("application_count", "role_application"),
+            ("feedback_count", "role_feedback"),
+        ):
+            cur.execute(f"SELECT COUNT(*) AS count FROM {table}")
+            stats[key] = cur.fetchone()["count"]
+
+        cur.execute(
+            """
+            SELECT user_id, username, user_type, real_name, school_company, create_time, status
+            FROM user
+            ORDER BY create_time DESC, user_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        recent_users = [dict(row) for row in cur.fetchall()]
+
+        cur.execute(
+            """
+            SELECT project_id, project_name, company, project_status, publish_time, deadline
+            FROM project
+            ORDER BY publish_time DESC, project_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        recent_projects = [dict(row) for row in cur.fetchall()]
+
+        cur.execute(
+            """
+            SELECT
+                f.feedback_id,
+                f.project_id,
+                p.project_name,
+                f.role_id,
+                r.role_name,
+                f.user_id,
+                u.username,
+                u.user_type,
+                f.status,
+                f.created_at
+            FROM role_feedback f
+            LEFT JOIN project p ON f.project_id = p.project_id
+            LEFT JOIN role r ON f.role_id = r.role_id
+            LEFT JOIN user u ON f.user_id = u.user_id
+            ORDER BY f.created_at DESC, f.feedback_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        recent_feedbacks = [dict(row) for row in cur.fetchall()]
+
+        return {
+            "code": 200,
+            "msg": "查询成功",
+            "data": {
+                "stats": stats,
+                "recent_users": recent_users,
+                "recent_projects": recent_projects,
+                "recent_feedbacks": recent_feedbacks,
+            },
+        }
+    except Exception as e:
+        return {"code": 500, "msg": f"后台数据查询失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_all_users(limit: int = 100) -> Dict:
+    safe_limit = max(1, min(500, int(limit or 100)))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT user_id, username, user_type, real_name, school_company, contact, status, create_time, last_login
+            FROM user
+            ORDER BY create_time DESC, user_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        return {"code": 200, "msg": "查询成功", "data": [dict(row) for row in cur.fetchall()]}
+    except Exception as e:
+        return {"code": 500, "msg": f"用户列表查询失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def admin_set_user_status(target_user_id: int, status: int, operator_user_id: int) -> Dict:
+    if status not in (0, 1):
+        return {"code": 400, "msg": "status 仅支持 0 或 1", "data": None}
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT user_id, username, user_type FROM user WHERE user_id = ?", (target_user_id,))
+        target = cur.fetchone()
+        if not target:
+            return {"code": 404, "msg": "用户不存在", "data": None}
+        if target["user_type"] == "管理员" and target_user_id == operator_user_id:
+            return {"code": 400, "msg": "不能禁用当前管理员账号", "data": None}
+
+        cur.execute("UPDATE user SET status = ? WHERE user_id = ?", (status, target_user_id))
+        conn.commit()
+        return {
+            "code": 200,
+            "msg": "用户状态更新成功",
+            "data": {"user_id": target_user_id, "status": status, "username": target["username"]},
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"code": 500, "msg": f"用户状态更新失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_all_projects(limit: int = 100) -> Dict:
+    safe_limit = max(1, min(500, int(limit or 100)))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT
+                p.project_id,
+                p.project_name,
+                p.company,
+                p.project_status,
+                p.publish_time,
+                p.deadline,
+                p.publisher_id,
+                u.username AS publisher_username
+            FROM project p
+            LEFT JOIN user u ON p.publisher_id = u.user_id
+            ORDER BY p.publish_time DESC, p.project_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        return {"code": 200, "msg": "查询成功", "data": [dict(row) for row in cur.fetchall()]}
+    except Exception as e:
+        return {"code": 500, "msg": f"项目列表查询失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_all_applications(limit: int = 100) -> Dict:
+    safe_limit = max(1, min(500, int(limit or 100)))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT
+                ra.application_id,
+                ra.status,
+                ra.motivation,
+                ra.apply_time,
+                ra.update_time,
+                ra.student_id,
+                u.username AS student_username,
+                u.real_name AS student_real_name,
+                ra.role_id,
+                r.role_name,
+                ra.project_id,
+                p.project_name,
+                p.company
+            FROM role_application ra
+            LEFT JOIN user u ON ra.student_id = u.user_id
+            LEFT JOIN role r ON ra.role_id = r.role_id
+            LEFT JOIN project p ON ra.project_id = p.project_id
+            ORDER BY ra.apply_time DESC, ra.application_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        return {"code": 200, "msg": "查询成功", "data": [dict(row) for row in cur.fetchall()]}
+    except Exception as e:
+        return {"code": 500, "msg": f"申请记录查询失败：{str(e)}", "data": None}
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_all_feedbacks(limit: int = 100) -> Dict:
+    safe_limit = max(1, min(500, int(limit or 100)))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT
+                f.feedback_id,
+                f.project_id,
+                p.project_name,
+                f.role_id,
+                r.role_name,
+                f.user_id,
+                u.username,
+                u.user_type,
+                f.content,
+                f.evidence_url,
+                f.status,
+                f.created_at
+            FROM role_feedback f
+            LEFT JOIN project p ON f.project_id = p.project_id
+            LEFT JOIN role r ON f.role_id = r.role_id
+            LEFT JOIN user u ON f.user_id = u.user_id
+            ORDER BY f.created_at DESC, f.feedback_id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        )
+        return {"code": 200, "msg": "查询成功", "data": [dict(row) for row in cur.fetchall()]}
+    except Exception as e:
+        return {"code": 500, "msg": f"反馈记录查询失败：{str(e)}", "data": None}
     finally:
         cur.close()
         conn.close()

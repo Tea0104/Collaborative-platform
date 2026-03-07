@@ -8,19 +8,19 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import (
+        delete_token,
         get_user_by_token,
         get_user_by_username,
         save_token,
-        delete_token,
         user_add,
         user_update,
     )
 except ImportError:
     from db import (
+        delete_token,
         get_user_by_token,
         get_user_by_username,
         save_token,
-        delete_token,
         user_add,
         user_update,
     )
@@ -28,7 +28,8 @@ except ImportError:
 
 auth_bp = Blueprint("auth", __name__)
 
-USER_TYPES = {"学生", "企业"}
+USER_TYPES = {"学生", "企业", "管理员"}
+REGISTER_USER_TYPES = {"学生", "企业"}
 
 
 def _get_bearer_token() -> Optional[str]:
@@ -54,6 +55,7 @@ def login_required(fn: Callable):
         user = get_user_by_token(token)
         if not user:
             return jsonify({"success": False, "message": "未登录：token 无效或已过期"}), 401
+
         request.current_user = user
         return fn(*args, **kwargs)
 
@@ -93,7 +95,7 @@ def api_register():
         return jsonify({"success": False, "message": "username 长度至少 3 位"}), 400
     if not password or len(password) < 6:
         return jsonify({"success": False, "message": "password 长度至少 6 位"}), 400
-    if user_type not in USER_TYPES:
+    if user_type not in REGISTER_USER_TYPES:
         return jsonify({"success": False, "message": "user_type 仅支持：学生/企业"}), 400
     if not real_name:
         return jsonify({"success": False, "message": "real_name 不能为空"}), 400
@@ -101,7 +103,6 @@ def api_register():
         return jsonify({"success": False, "message": "school_company 不能为空"}), 400
 
     password_hash = generate_password_hash(password)
-
     res = user_add(
         username=username,
         password_hash=password_hash,
@@ -114,13 +115,12 @@ def api_register():
     )
     if res["code"] != 200:
         return jsonify({"success": False, "message": res["msg"]}), 400
-    user_id = res["data"]["user_id"]
 
     return jsonify(
         {
             "success": True,
             "message": "注册成功",
-            "user_id": user_id,
+            "user_id": res["data"]["user_id"],
             "user_type": user_type,
         }
     ), 201
@@ -140,6 +140,8 @@ def api_login():
         return jsonify({"success": False, "message": "账号或密码错误"}), 401
     if user["status"] != 1:
         return jsonify({"success": False, "message": "账号已被禁用"}), 403
+    if user["user_type"] not in USER_TYPES:
+        return jsonify({"success": False, "message": "账号类型不支持登录"}), 403
 
     token = secrets.token_urlsafe(32)
     save_token(token, user["user_id"])

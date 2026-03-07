@@ -4,15 +4,17 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 try:
+    from .admin import admin_bp
     from .applications import applications_bp
     from .auth import auth_bp
-    from .db import init_database, seed_demo_data_if_empty
+    from .db import ensure_admin_user, init_database, seed_demo_data_if_empty
     from .projects import projects_bp
 except ImportError:
     # Fallback for environments that execute files directly instead of package mode.
+    from admin import admin_bp
     from applications import applications_bp
     from auth import auth_bp
-    from db import init_database, seed_demo_data_if_empty
+    from db import ensure_admin_user, init_database, seed_demo_data_if_empty
     from projects import projects_bp
 
 
@@ -94,6 +96,10 @@ def create_app() -> Flask:
     def enterprise_project_detail_page(project_id: int):  # noqa: ARG001
         return send_from_directory(frontend_dir, "enterprise_project_detail.html")
 
+    @app.get("/admin")
+    def admin_dashboard_page():
+        return send_from_directory(frontend_dir, "admin_dashboard.html")
+
     @app.get("/<path:filename>")
     def frontend_file(filename: str):
         return send_from_directory(frontend_dir, filename)
@@ -101,11 +107,13 @@ def create_app() -> Flask:
     # DB init/migrate + demo data
     init_database()
     seed_demo_data_if_empty()
+    ensure_admin_user()
 
     # 路由注册
     app.register_blueprint(auth_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(applications_bp)
+    app.register_blueprint(admin_bp)
     # legacy/team 接口不注册（按新方案重写）
 
     return app
